@@ -97,15 +97,6 @@ class _LoginScreenState extends State<LoginScreen>
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       // Static Logo at top of card
-                      Hero(
-                        tag: 'logo',
-                        child: Image.asset(
-                          AppConstants.logoPath,
-                          width: 80,
-                          height: 80,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
                       const Text(
                         AppConstants.appName,
                         textAlign: TextAlign.center,
