@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../widgets/app_drawer.dart';
+import 'asset_management_screen.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -50,9 +51,11 @@ class AdminDashboard extends StatelessWidget {
             const SizedBox(height: 15),
 
             // Overview Cards
-            _buildLargeCard('Total Users', '100', AppColors.primaryTeal),
+            _buildLargeCard(
+                context, 'Total Users', '100', AppColors.primaryTeal),
             const SizedBox(height: 15),
-            _buildLargeCard('Total Assets', '1000', AppColors.primaryOrange),
+            _buildLargeCard(
+                context, 'Total Assets', '1000', AppColors.primaryOrange),
 
             const SizedBox(height: 30),
             const Text(
@@ -66,19 +69,20 @@ class AdminDashboard extends StatelessWidget {
             const SizedBox(height: 15),
 
             // Division List
-            _buildDivisionCard('Information Technology', '100', '100'),
-            _buildDivisionCard('Admin', '100', '100'),
-            _buildDivisionCard('Procurement', '100', '100'),
-            _buildDivisionCard('HR', '100', '100'),
-            _buildDivisionCard('Stores', '100', '100'),
+            _buildDivisionCard(context, 'Information Technology', '100', '100'),
+            _buildDivisionCard(context, 'Admin', '100', '100'),
+            _buildDivisionCard(context, 'Procurement', '100', '100'),
+            _buildDivisionCard(context, 'HR', '100', '100'),
+            _buildDivisionCard(context, 'Stores', '100', '100'),
             _buildDivisionCard(
-                'Electronics and Microelectronics', '100', '100'),
-            _buildDivisionCard('Industrial Services', '100', '100'),
-            _buildDivisionCard('Communication Engineering', '100', '100'),
-            _buildDivisionCard('Astronomy', '100', '100'),
-            _buildDivisionCard('Space Applications', '100', '100'),
-            _buildDivisionCard('Finance', '100', '100'),
-            _buildDivisionCard('Procurement', '100', '100'),
+                context, 'Electronics and Microelectronics', '100', '100'),
+            _buildDivisionCard(context, 'Industrial Services', '100', '100'),
+            _buildDivisionCard(
+                context, 'Communication Engineering', '100', '100'),
+            _buildDivisionCard(context, 'Astronomy', '100', '100'),
+            _buildDivisionCard(context, 'Space Applications', '100', '100'),
+            _buildDivisionCard(context, 'Finance', '100', '100'),
+            _buildDivisionCard(context, 'Procurement', '100', '100'),
 
             const SizedBox(height: 20),
           ],
@@ -88,66 +92,88 @@ class AdminDashboard extends StatelessWidget {
   }
 
   // colored cards (Total Users, Total Assets)
-  Widget _buildLargeCard(String title, String value, Color color) {
-    return Container(
-      width: double.infinity,
-      height: 120,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(color: Colors.white, fontSize: 16),
-          ),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
+  Widget _buildLargeCard(
+      BuildContext context, String title, String value, Color color) {
+    return GestureDetector(
+      onTap: () {
+        if (title == 'Total Assets') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const AssetManagementScreen()),
+          );
+        }
+      },
+      child: Container(
+        width: double.infinity,
+        height: 120,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+            ),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   // Division cards
-  Widget _buildDivisionCard(String name, String assets, String value) {
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-            color: AppColors.primaryBlue.withOpacity(0.5), width: 1.5),
-      ),
-      child: Column(
-        children: [
-          Text(
-            name,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(height: 15),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatItem('Total Assets', assets),
-              _buildStatItem('Total Value', value),
-            ],
-          ),
-        ],
+  Widget _buildDivisionCard(
+      BuildContext context, String name, String assets, String value) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => const AssetManagementScreen()),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+              color: AppColors.primaryBlue.withOpacity(0.5), width: 1.5),
+        ),
+        child: Column(
+          children: [
+            Text(
+              name,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildStatItem('Total Assets', assets),
+                _buildStatItem('Total Value', value),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

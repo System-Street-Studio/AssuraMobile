@@ -3,9 +3,151 @@ import '../core/constants/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../widgets/app_drawer.dart';
 import 'scanner_screen.dart';
+import 'asset_details_screen.dart';
 
-class AssetManagementScreen extends StatelessWidget {
+class AssetManagementScreen extends StatefulWidget {
   const AssetManagementScreen({super.key});
+
+  @override
+  State<AssetManagementScreen> createState() => _AssetManagementScreenState();
+}
+
+class _AssetManagementScreenState extends State<AssetManagementScreen> {
+  String selectedDivision = 'All';
+  String selectedStatus = 'All';
+
+  final List<Map<String, dynamic>> allAssets = [
+    {
+      'name': 'Dell XPS 15',
+      'status': 'Active',
+      'division': 'Information Technology',
+      'bgColor': const Color(0xFFE8F5E9),
+      'textColor': Colors.green
+    },
+    {
+      'name': 'HP ProBook',
+      'status': 'Repair',
+      'division': 'Admin',
+      'bgColor': const Color(0xFFFFF3E0),
+      'textColor': Colors.orange
+    },
+    {
+      'name': 'Apple MacBook',
+      'status': 'Active',
+      'division': 'Procurement',
+      'bgColor': const Color(0xFFE8F5E9),
+      'textColor': Colors.green
+    },
+    {
+      'name': 'Lenovo ThinkPad',
+      'status': 'Discarded',
+      'division': 'Information Technology',
+      'bgColor': const Color(0xFFFFEBEE),
+      'textColor': Colors.red
+    },
+  ];
+
+  final List<String> divisions = [
+    'All',
+    'Information Technology',
+    'Admin',
+    'Procurement',
+    'HR',
+    'Stores',
+    'Space Applications',
+    'Electronics and Microelectronics',
+    'Inductrial Services',
+    'Communication Engineering',
+    'Astronomy',
+    'Finance'
+  ];
+  final List<String> statuses = ['All', 'Active', 'Repair', 'Discarded'];
+
+  List<Map<String, dynamic>> get filteredAssets {
+    return allAssets.where((asset) {
+      final matchDivision =
+          selectedDivision == 'All' || asset['division'] == selectedDivision;
+      final matchStatus =
+          selectedStatus == 'All' || asset['status'] == selectedStatus;
+      return matchDivision && matchStatus;
+    }).toList();
+  }
+
+  void _showFilterBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(builder: (context, setModalState) {
+          return Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Filter Assets',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                const Text('By Division',
+                    style: TextStyle(fontWeight: FontWeight.w500)),
+                DropdownButton<String>(
+                  value: selectedDivision,
+                  isExpanded: true,
+                  items: divisions.map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (newValue) {
+                    setModalState(() {
+                      selectedDivision = newValue!;
+                    });
+                    setState(() {});
+                  },
+                ),
+                const SizedBox(height: 20),
+                const Text('By Status',
+                    style: TextStyle(fontWeight: FontWeight.w500)),
+                DropdownButton<String>(
+                  value: selectedStatus,
+                  isExpanded: true,
+                  items: statuses.map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: (newValue) {
+                    setModalState(() {
+                      selectedStatus = newValue!;
+                    });
+                    setState(() {});
+                  },
+                ),
+                const SizedBox(height: 30),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: const Text('Apply Filters',
+                      style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            ),
+          );
+        });
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,20 +221,23 @@ class AssetManagementScreen extends StatelessWidget {
                     const SizedBox(height: 15),
 
                     // Filter Button
-                    Container(
-                      width: 100,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFD9D9D9).withOpacity(0.8),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.filter_list, size: 20),
-                          SizedBox(width: 5),
-                          Text('Filter'),
-                        ],
+                    GestureDetector(
+                      onTap: _showFilterBottomSheet,
+                      child: Container(
+                        width: 100,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD9D9D9).withOpacity(0.8),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(Icons.filter_list, size: 20),
+                            SizedBox(width: 5),
+                            Text('Filter'),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 30),
@@ -122,15 +267,24 @@ class AssetManagementScreen extends StatelessWidget {
                     const SizedBox(height: 20),
 
                     // Asset Rows
-                    _buildAssetRow('Dell XPS 15', 'Active',
-                        const Color(0xFFD4F8D4), Colors.green),
-                    _buildAssetRow('Macbook Air 14', 'Repair',
-                        const Color(0xFFD4E3F8), Colors.blue),
-                    _buildAssetRow('HP Printer', 'Discarded',
-                        const Color(0xFFF8D4D4), Colors.red),
+                    ...filteredAssets.map((asset) {
+                      return _buildAssetRow(
+                        context,
+                        asset['name'],
+                        asset['status'],
+                        asset['bgColor'],
+                        asset['textColor'],
+                      );
+                    }).toList(),
 
-                    const SizedBox(
-                        height: 120), // Height matching screenshot space
+                    if (filteredAssets.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20.0),
+                        child: Text('No assets found for selected filters',
+                            style: TextStyle(color: Colors.grey)),
+                      ),
+
+                    const SizedBox(height: 50),
                   ],
                 ),
               ),
@@ -219,16 +373,26 @@ class AssetManagementScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAssetRow(
-      String name, String status, Color bgColor, Color textColor) {
+  Widget _buildAssetRow(BuildContext context, String name, String status,
+      Color bgColor, Color textColor) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            name,
-            style: const TextStyle(fontSize: 15, color: Colors.black87),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AssetDetailsScreen(assetName: name),
+                ),
+              );
+            },
+            child: Text(
+              name,
+              style: const TextStyle(fontSize: 15, color: Colors.black87),
+            ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
