@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_constants.dart';
+import 'admin_dashboard.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -180,7 +181,12 @@ class _LoginScreenState extends State<LoginScreen>
                                   _isVerifying = false;
                                 });
                                 _controller.stop();
-                                // You can navigate to the next screen here
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const AdminDashboard(),
+                                  ),
+                                );
                               }
                             });
                           },
