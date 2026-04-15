@@ -9,14 +9,27 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  late AnimationController _controller;
+  bool _isVerifying = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+  }
 
   @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -30,137 +43,177 @@ class _LoginScreenState extends State<LoginScreen> {
         decoration: const BoxDecoration(color: Colors.white),
         child: Stack(
           children: [
-            // Decorative background elements
-            Positioned(
-              left: -95,
-              top: -144,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: const ShapeDecoration(
-                  color: AppColors.primaryBlue,
-                  shape: OvalBorder(),
-                ),
-              ),
-            ),
-            Positioned(
-              right: -76,
-              bottom: -122,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: const ShapeDecoration(
-                  color: AppColors.primaryOrange,
-                  shape: OvalBorder(),
-                ),
-              ),
-            ),
-
-            // Login Card
-            Center(
-              child: Container(
-                width: 304,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                decoration: ShapeDecoration(
-                  color: AppColors.cardBackground,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+            // 1. Regular Login Screen
+            if (!_isVerifying) ...[
+              // Decorative background elements
+              Positioned(
+                left: -95,
+                top: -144,
+                child: Container(
+                  width: 300,
+                  height: 300,
+                  decoration: const ShapeDecoration(
+                    color: AppColors.primaryBlue,
+                    shape: OvalBorder(),
                   ),
-                  shadows: const [
-                    BoxShadow(
-                      color: Color(0x3F000000),
-                      blurRadius: 4,
-                      offset: Offset(-4, 4),
-                      spreadRadius: 0,
-                    )
-                  ],
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const Text(
-                      AppConstants.appName,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: AppColors.primaryBlue,
-                        fontSize: 25,
-                        fontWeight: FontWeight.w700,
-                        height: 0,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      AppConstants.loginSubtitle,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                        height: 0,
-                      ),
-                    ),
-                    const SizedBox(height: 48),
+              ),
+              Positioned(
+                right: -76,
+                bottom: -122,
+                child: Container(
+                  width: 300,
+                  height: 300,
+                  decoration: const ShapeDecoration(
+                    color: AppColors.primaryOrange,
+                    shape: OvalBorder(),
+                  ),
+                ),
+              ),
 
-                    // Username Field
-                    TextField(
-                      controller: _usernameController,
-                      decoration: const InputDecoration(
-                        prefixIcon: Icon(Icons.person_outline,
-                            size: 20, color: AppColors.textGrey),
-                        hintText: AppConstants.usernameHint,
-                      ),
+              // Login Card
+              Center(
+                child: Container(
+                  width: 304,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  decoration: ShapeDecoration(
+                    color: AppColors.cardBackground,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    const SizedBox(height: 20),
-
-                    // Password Field
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        prefixIcon: Icon(Icons.lock_outline,
-                            size: 20, color: AppColors.textGrey),
-                        hintText: AppConstants.passwordHint,
+                    shadows: const [
+                      BoxShadow(
+                        color: Color(0x3F000000),
+                        blurRadius: 4,
+                        offset: Offset(-4, 4),
+                        spreadRadius: 0,
+                      )
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Static Logo at top of card
+                      Hero(
+                        tag: 'logo',
+                        child: Image.asset(
+                          AppConstants.logoPath,
+                          width: 80,
+                          height: 80,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
+                      const SizedBox(height: 16),
+                      const Text(
+                        AppConstants.appName,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppColors.primaryBlue,
+                          fontSize: 25,
+                          fontWeight: FontWeight.w700,
+                          height: 0,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        AppConstants.loginSubtitle,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w400,
+                          height: 0,
+                        ),
+                      ),
+                      const SizedBox(height: 48),
 
-                    // Forgot Password
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {},
-                        style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                        child: const Text(
-                          AppConstants.forgotPasswordText,
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w400,
+                      // Username Field
+                      TextField(
+                        controller: _usernameController,
+                        decoration: const InputDecoration(
+                          prefixIcon: Icon(Icons.person_outline,
+                              size: 20, color: AppColors.textGrey),
+                          hintText: AppConstants.usernameHint,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Password Field
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          prefixIcon: Icon(Icons.lock_outline,
+                              size: 20, color: AppColors.textGrey),
+                          hintText: AppConstants.passwordHint,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Forgot Password
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {},
+                          style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                          child: const Text(
+                            AppConstants.forgotPasswordText,
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                            ),
                           ),
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                    // Login Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 38,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // TODO: Implement Login Logic
-                        },
-                        child: const Text(AppConstants.loginButtonText),
+                      // Login Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 38,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _isVerifying = true;
+                            });
+                            _controller.repeat();
+
+                            // Simulate verification process
+                            Future.delayed(const Duration(seconds: 3), () {
+                              if (mounted) {
+                                setState(() {
+                                  _isVerifying = false;
+                                });
+                                _controller.stop();
+                                // You can navigate to the next screen here
+                              }
+                            });
+                          },
+                          child: const Text(AppConstants.loginButtonText),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
+            ],
+
+            // 2. Full-Screen Spinning Logo (Verification State)
+            if (_isVerifying)
+              Center(
+                child: RotationTransition(
+                  turns: _controller,
+                  child: Image.asset(
+                    AppConstants.logoPath,
+                    width: 100, // Slightly larger for the loading state
+                    height: 100,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
