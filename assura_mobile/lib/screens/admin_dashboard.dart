@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_constants.dart';
+import '../widgets/app_drawer.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -9,7 +10,7 @@ class AdminDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundGrey,
-      endDrawer: _buildDrawer(context),
+      endDrawer: const AppDrawer(),
       appBar: AppBar(
         automaticallyImplyLeading: false, // Prevents default drawer icon
         backgroundColor: Colors.transparent,
@@ -164,122 +165,6 @@ class AdminDashboard extends StatelessWidget {
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
       ],
-    );
-  }
-
-  Widget _buildDrawer(BuildContext context) {
-    return Drawer(
-      backgroundColor:
-          const Color(0xFFE0E0E0), // Light grey matching screenshot
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          bottomLeft: Radius.circular(20),
-        ),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 50),
-          // Drawer Header with "Menu" and close icon
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Menu',
-                  style: TextStyle(
-                    color: AppColors.primaryBlue,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.menu, color: AppColors.primaryBlue),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 30),
-
-          // User Profile Section
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Row(
-              children: [
-                const CircleAvatar(
-                  radius: 30,
-                  backgroundColor: AppColors.primaryBlue,
-                  child: Icon(Icons.person, color: Colors.white, size: 35),
-                ),
-                const SizedBox(width: 15),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'David Emmit',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryOrange,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        'Admin',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 40),
-
-          // Menu Items
-          _buildDrawerItem(Icons.home_outlined, 'Overview', true, () {
-            Navigator.pop(context);
-          }),
-          _buildDrawerItem(Icons.location_on_outlined, 'Assets Tracking', false,
-              () {
-            // Navigate to assets tracking
-            Navigator.pop(context);
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem(
-      IconData icon, String title, bool isSelected, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: AppColors.primaryBlue,
-        size: 28,
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w500,
-          color: Colors.black87,
-        ),
-      ),
-      onTap: onTap,
     );
   }
 }
