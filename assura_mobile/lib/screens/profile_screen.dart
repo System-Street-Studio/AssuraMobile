@@ -91,16 +91,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 child: Column(
                   children: [
-                    // Avatar and Edit Toggle
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         const CircleAvatar(
-                          radius: 50,
+                          radius: 40,
                           backgroundColor: AppColors.primaryBlue,
                           child:
-                              Icon(Icons.person, size: 60, color: Colors.white),
+                              Icon(Icons.person, size: 50, color: Colors.white),
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'David Emmit',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryOrange,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Text(
+                                  'Admin',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         IconButton(
                           onPressed: () {
@@ -118,37 +149,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                     ),
                     const SizedBox(height: 30),
-
                     _buildField('Username', _usernameController,
                         editable: true),
                     const SizedBox(height: 15),
-
                     _buildField('First Name', _firstNameController,
                         editable: true),
                     const SizedBox(height: 15),
-
                     _buildField('Last Name', _lastNameController,
                         editable: true),
                     const SizedBox(height: 15),
-
                     _buildField('Password', _passwordController,
                         editable: true, isPassword: true),
                     const SizedBox(height: 15),
-
                     _buildField('Email Address', _emailController,
                         editable: true),
                     const SizedBox(height: 15),
-
                     _buildStaticField('User Role(s)', _role),
                     const SizedBox(height: 15),
-
                     _buildStaticField('Working Division', _division),
                     const SizedBox(height: 15),
-
                     _buildField('Telephone Number', _phoneController,
                         editable: true),
                     const SizedBox(height: 40),
-
                     if (isEditMode)
                       ElevatedButton(
                         onPressed: () {
