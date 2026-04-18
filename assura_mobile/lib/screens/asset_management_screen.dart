@@ -18,6 +18,8 @@ class AssetManagementScreen extends StatefulWidget {
 class _AssetManagementScreenState extends State<AssetManagementScreen> {
   String selectedDivision = 'All';
   String selectedStatus = 'All';
+  String searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -27,16 +29,32 @@ class _AssetManagementScreenState extends State<AssetManagementScreen> {
     });
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   List<String> get divisions {
     final assetService = Provider.of<AssetService>(context, listen: false);
     final divs =
         assetService.assets.map((a) => a.divisionName).toSet().toList();
+    divs.removeWhere((element) => element == 'N/A' || element.isEmpty);
     divs.sort();
     return ['All', ...divs];
   }
 
   List<String> get statuses {
-    return ['All', 'Active', 'Repair', 'Discarded', 'Transferred', 'Missing'];
+    return [
+      'All',
+      'Active',
+      'Repair',
+      'Discarded',
+      'Transferred',
+      'Missing',
+      'UnderMaintenance',
+      'InUse'
+    ];
   }
 
   void _showFilterBottomSheet() {
@@ -47,6 +65,12 @@ class _AssetManagementScreenState extends State<AssetManagementScreen> {
       ),
       builder: (context) {
         return StatefulBuilder(builder: (context, setModalState) {
+          final divs = divisions;
+          // Ensure selectedDivision is still valid if divs list changed
+          if (!divs.contains(selectedDivision)) {
+            selectedDivision = 'All';
+          }
+
           return Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
@@ -63,7 +87,7 @@ class _AssetManagementScreenState extends State<AssetManagementScreen> {
                 DropdownButton<String>(
                   value: selectedDivision,
                   isExpanded: true,
-                  items: divisions.map((String value) {
+                  items: divs.map((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(value),
@@ -127,7 +151,10 @@ class _AssetManagementScreenState extends State<AssetManagementScreen> {
           selectedDivision == 'All' || asset.divisionName == selectedDivision;
       final matchStatus =
           selectedStatus == 'All' || asset.statusText == selectedStatus;
-      return matchDivision && matchStatus;
+      final matchSearch = searchQuery.isEmpty ||
+          asset.productName.toLowerCase().contains(searchQuery.toLowerCase()) ||
+          asset.assetCode.toLowerCase().contains(searchQuery.toLowerCase());
+      return matchDivision && matchStatus && matchSearch;
     }).toList();
 
     return Scaffold(
@@ -190,9 +217,15 @@ class _AssetManagementScreenState extends State<AssetManagementScreen> {
                           color: const Color(0xFFD9D9D9).withOpacity(0.5),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const TextField(
-                          decoration: InputDecoration(
-                            hintText: 'Search by Name',
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: (value) {
+                            setState(() {
+                              searchQuery = value;
+                            });
+                          },
+                          decoration: const InputDecoration(
+                            hintText: 'Search by Name or Code',
                             hintStyle: TextStyle(color: Colors.grey),
                             prefixIcon:
                                 Icon(Icons.search, color: Colors.black54),
