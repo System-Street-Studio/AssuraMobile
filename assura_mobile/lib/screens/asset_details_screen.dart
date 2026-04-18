@@ -2,18 +2,32 @@ import 'package:flutter/material.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../widgets/app_drawer.dart';
+import '../core/models/asset_model.dart';
+import 'package:intl/intl.dart';
 
 class AssetDetailsScreen extends StatefulWidget {
-  final String assetName;
-  const AssetDetailsScreen({super.key, required this.assetName});
+  final AssetModel asset;
+  const AssetDetailsScreen({super.key, required this.asset});
 
   @override
   State<AssetDetailsScreen> createState() => _AssetDetailsScreenState();
 }
 
 class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
-  String selectedStatus = 'Active';
-  final List<String> statuses = ['Active', 'Repair', 'Discarded'];
+  late String selectedStatus;
+  final List<String> statuses = [
+    'Active',
+    'Repair',
+    'Discarded',
+    'Transferred',
+    'Missing'
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    selectedStatus = widget.asset.statusText;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,24 +70,28 @@ class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    widget.assetName,
+                    widget.asset.productName,
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                       color: Colors.black,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 30),
-                  _buildDetailField('Asset ID', widget.assetName),
+                  _buildDetailField('Asset Code', widget.asset.assetCode),
                   const SizedBox(height: 15),
-                  _buildDetailField('Category', 'Computers'),
+                  _buildDetailField('Category', widget.asset.categoryName),
                   const SizedBox(height: 15),
-                  _buildDetailField('Current User', 'Alison Paul'),
+                  _buildDetailField('Current User',
+                      widget.asset.assignedUserName ?? 'Unassigned'),
+                  const SizedBox(height: 15),
+                  _buildDetailField('Division', widget.asset.divisionName),
                   const SizedBox(height: 15),
                   _buildDetailField(
-                      'Current Division', 'Information Technology'),
-                  const SizedBox(height: 15),
-                  _buildDetailField('Current Value (LKR)', '120,000'),
+                      'Purchase Value',
+                      NumberFormat.currency(symbol: 'Rs. ', decimalDigits: 2)
+                          .format(widget.asset.purchaseValue)),
                   const SizedBox(height: 15),
                   _buildStatusDropdown(),
                   const SizedBox(height: 40),
@@ -143,7 +161,8 @@ class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: selectedStatus,
+              value: statuses.contains(selectedStatus) ? selectedStatus : null,
+              hint: const Text('Select Status'),
               isExpanded: true,
               icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
               onChanged: (String? newValue) {

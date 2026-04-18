@@ -1,24 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../widgets/app_drawer.dart';
+import '../services/dashboard_service.dart';
 import 'asset_management_screen.dart';
 
-class AdminDashboard extends StatelessWidget {
+class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
 
   @override
+  State<AdminDashboard> createState() => _AdminDashboardState();
+}
+
+class _AdminDashboardState extends State<AdminDashboard> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch stats on load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<DashboardService>(context, listen: false)
+          .fetchDashboardStats();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final dashboardService = Provider.of<DashboardService>(context);
+    final stats = dashboardService.stats;
+    final isLoading = dashboardService.isLoading;
+    final error = dashboardService.error;
+
     return Scaffold(
       backgroundColor: AppColors.backgroundGrey,
       endDrawer: const AppDrawer(),
       appBar: AppBar(
-        automaticallyImplyLeading: false, // Prevents default drawer icon
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: Padding(
           padding: const EdgeInsets.only(left: 16.0),
-          child: Image.asset(AppConstants.logoPath), // logo
+          child: Image.asset(AppConstants.logoPath),
         ),
         actions: [
           Builder(builder: (context) {
@@ -33,59 +55,71 @@ class AdminDashboard extends StatelessWidget {
           const SizedBox(width: 8),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Center(
-              child: Text(
-                'Overview',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+      body: RefreshIndicator(
+        onRefresh: () => dashboardService.fetchDashboardStats(),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Center(
+                child: Text(
+                  'Overview',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 15),
+              const SizedBox(height: 15),
+              if (isLoading && stats == null)
+                const Center(child: CircularProgressIndicator())
+              else if (error != null && stats == null)
+                Center(
+                  child: Column(
+                    children: [
+                      Text('Error: $error',
+                          style: const TextStyle(color: Colors.red)),
+                      ElevatedButton(
+                        onPressed: () => dashboardService.fetchDashboardStats(),
+                        child: const Text('Try Again'),
+                      ),
+                    ],
+                  ),
+                )
+              else ...[
+                // Overview Cards
+                _buildLargeCard(context, 'Total Users',
+                    '${stats?.totalUsers ?? 0}', AppColors.primaryTeal),
+                const SizedBox(height: 15),
+                _buildLargeCard(context, 'Total Assets',
+                    '${stats?.totalAssets ?? 0}', AppColors.primaryOrange),
 
-            // Overview Cards
-            _buildLargeCard(
-                context, 'Total Users', '100', AppColors.primaryTeal),
-            const SizedBox(height: 15),
-            _buildLargeCard(
-                context, 'Total Assets', '1000', AppColors.primaryOrange),
+                const SizedBox(height: 30),
+                const Text(
+                  'Division',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 15),
 
-            const SizedBox(height: 30),
-            const Text(
-              'Division',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 15),
-
-            // Division List
-            _buildDivisionCard(context, 'Information Technology', '100', '100'),
-            _buildDivisionCard(context, 'Admin', '100', '100'),
-            _buildDivisionCard(context, 'Procurement', '100', '100'),
-            _buildDivisionCard(context, 'HR', '100', '100'),
-            _buildDivisionCard(context, 'Stores', '100', '100'),
-            _buildDivisionCard(
-                context, 'Electronics and Microelectronics', '100', '100'),
-            _buildDivisionCard(context, 'Industrial Services', '100', '100'),
-            _buildDivisionCard(
-                context, 'Communication Engineering', '100', '100'),
-            _buildDivisionCard(context, 'Astronomy', '100', '100'),
-            _buildDivisionCard(context, 'Space Applications', '100', '100'),
-            _buildDivisionCard(context, 'Finance', '100', '100'),
-            _buildDivisionCard(context, 'Procurement', '100', '100'),
-
-            const SizedBox(height: 20),
-          ],
+                // Division List
+                if (stats?.assetsByDivision.isEmpty ?? true)
+                  const Center(child: Text('No division data available.'))
+                else
+                  ...stats!.assetsByDivision
+                      .map((item) => _buildDivisionCard(
+                          context, item.label, '${item.count}', 'N/A'))
+                      .toList(),
+              ],
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );

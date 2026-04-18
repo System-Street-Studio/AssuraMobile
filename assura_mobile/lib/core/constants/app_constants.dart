@@ -8,11 +8,12 @@ class AppConstants {
   static const String forgotPasswordText = 'Forgot Password';
 
   // API Endpoints (Placeholders)
-  static const String baseUrl =
-      'http://10.0.2.2:5000/api'; // Android emulator localhost
+  static const String apiBaseUrl =
+      'http://10.0.2.2:5000'; // Android emulator localhost
   static const String healthEndpoint = '/health';
-  static const String loginEndpoint = '/auth/login';
-  static const String profileEndpoint = '/user/profile';
+  static const String loginEndpoint = '/api/Auth/login';
+  static const String profileEndpoint = '/api/User/profile';
+  static const String dashboardStatsEndpoint = '/api/Admin/dashboard-stats';
 
   // Assets
   static const String logoPath = 'assets/images/LOGO2.png';
