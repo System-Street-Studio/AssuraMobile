@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../widgets/app_drawer.dart';
+import '../services/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -13,27 +15,27 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool isEditMode = false;
 
-  final TextEditingController _usernameController =
-      TextEditingController(text: 'david_emmit');
-  final TextEditingController _firstNameController =
-      TextEditingController(text: 'David');
-  final TextEditingController _lastNameController =
-      TextEditingController(text: 'Emmit');
+  late TextEditingController _usernameController;
+  late TextEditingController _nameController;
   final TextEditingController _passwordController =
-      TextEditingController(text: 'password123');
+      TextEditingController(text: '••••••••');
   final TextEditingController _emailController =
-      TextEditingController(text: 'david.emmit@systemstreet.com');
+      TextEditingController(text: 'N/A');
   final TextEditingController _phoneController =
-      TextEditingController(text: '+94 77 123 4567');
+      TextEditingController(text: 'N/A');
 
-  final String _role = 'Admin';
-  final String _division = 'Information Technology';
+  @override
+  void initState() {
+    super.initState();
+    final user = Provider.of<AuthService>(context, listen: false).user;
+    _usernameController = TextEditingController(text: user?.userName ?? '');
+    _nameController = TextEditingController(text: user?.name ?? '');
+  }
 
   @override
   void dispose() {
     _usernameController.dispose();
-    _firstNameController.dispose();
-    _lastNameController.dispose();
+    _nameController.dispose();
     _passwordController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
@@ -42,6 +44,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+    final user = authService.user;
+
     return Scaffold(
       backgroundColor: AppColors.backgroundGrey,
       endDrawer: const AppDrawer(),
@@ -105,9 +110,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'David Emmit',
-                                style: TextStyle(
+                              Text(
+                                user?.name ?? 'Assura Admin',
+                                style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.black,
@@ -121,9 +126,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   color: AppColors.primaryOrange,
                                   borderRadius: BorderRadius.circular(20),
                                 ),
-                                child: const Text(
-                                  'Admin',
-                                  style: TextStyle(
+                                child: Text(
+                                  user?.roles.isNotEmpty == true
+                                      ? user!.roles.first
+                                      : 'Admin',
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
@@ -152,11 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _buildField('Username', _usernameController,
                         editable: true),
                     const SizedBox(height: 15),
-                    _buildField('First Name', _firstNameController,
-                        editable: true),
-                    const SizedBox(height: 15),
-                    _buildField('Last Name', _lastNameController,
-                        editable: true),
+                    _buildField('Full Name', _nameController, editable: true),
                     const SizedBox(height: 15),
                     _buildField('Password', _passwordController,
                         editable: true, isPassword: true),
@@ -164,9 +167,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _buildField('Email Address', _emailController,
                         editable: true),
                     const SizedBox(height: 15),
-                    _buildStaticField('User Role(s)', _role),
+                    _buildStaticField(
+                        'User Role(s)', user?.roles.join(', ') ?? 'Admin'),
                     const SizedBox(height: 15),
-                    _buildStaticField('Working Division', _division),
+                    _buildStaticField(
+                        'Working Division', 'Information Technology'),
                     const SizedBox(height: 15),
                     _buildField('Telephone Number', _phoneController,
                         editable: true),
@@ -174,7 +179,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     if (isEditMode)
                       ElevatedButton(
                         onPressed: () {
-                          // TODO: Implement save logic
                           setState(() {
                             isEditMode = false;
                           });

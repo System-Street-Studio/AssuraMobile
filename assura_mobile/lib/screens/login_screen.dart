@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/auth_service.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import 'admin_dashboard.dart';
@@ -15,7 +17,7 @@ class _LoginScreenState extends State<LoginScreen>
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   late AnimationController _controller;
-  bool _isVerifying = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -34,6 +36,47 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
+  void _handleLogin() async {
+    if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter username and password')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+    _controller.repeat();
+
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final success = await authService.login(
+        _usernameController.text,
+        _passwordController.text,
+      );
+
+      if (success && mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const AdminDashboard()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        _controller.stop();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen>
         child: Stack(
           children: [
             // 1. Regular Login Screen
-            if (!_isVerifying) ...[
+            if (!_isLoading) ...[
               // Decorative background elements
               Positioned(
                 left: -95,
@@ -168,28 +211,7 @@ class _LoginScreenState extends State<LoginScreen>
                         width: double.infinity,
                         height: 38,
                         child: ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _isVerifying = true;
-                            });
-                            _controller.repeat();
-
-                            // Simulate verification process
-                            Future.delayed(const Duration(seconds: 3), () {
-                              if (mounted) {
-                                setState(() {
-                                  _isVerifying = false;
-                                });
-                                _controller.stop();
-                                Navigator.of(context).pushReplacement(
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const AdminDashboard(),
-                                  ),
-                                );
-                              }
-                            });
-                          },
+                          onPressed: _handleLogin,
                           child: const Text(AppConstants.loginButtonText),
                         ),
                       ),
@@ -200,7 +222,7 @@ class _LoginScreenState extends State<LoginScreen>
             ],
 
             // 2. Full-Screen Spinning Logo (Verification State)
-            if (_isVerifying)
+            if (_isLoading)
               Center(
                 child: RotationTransition(
                   turns: _controller,
