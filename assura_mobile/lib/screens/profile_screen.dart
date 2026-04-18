@@ -14,6 +14,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  final _formKey = GlobalKey<FormState>();
   bool isEditMode = false;
   bool isLoading = true;
 
@@ -58,6 +59,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _saveChanges() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
     final authService = Provider.of<AuthService>(context, listen: false);
     final currentProfile = authService.profile;
     if (currentProfile == null) return;
@@ -138,146 +143,186 @@ class _ProfileScreenState extends State<ProfileScreen> {
           : SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  children: [
-                    const Text(
-                      'User Profile',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                child: Form(
+                  key: _formKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  child: Column(
+                    children: [
+                      const Text(
+                        'User Profile',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 25),
+                      const SizedBox(height: 25),
 
-                    // Profile Card
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(25),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(25),
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              const CircleAvatar(
-                                radius: 40,
-                                backgroundColor: AppColors.primaryBlue,
-                                child: Icon(Icons.person,
-                                    size: 50, color: Colors.white),
-                              ),
-                              const SizedBox(width: 20),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${profile?.firstName ?? 'Assura'} ${profile?.lastName ?? 'Admin'}',
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 5),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.primaryOrange,
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Text(
-                                        profile?.role ?? 'Admin',
+                      // Profile Card
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(25),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const CircleAvatar(
+                                  radius: 40,
+                                  backgroundColor: AppColors.primaryBlue,
+                                  child: Icon(Icons.person,
+                                      size: 50, color: Colors.white),
+                                ),
+                                const SizedBox(width: 20),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${profile?.firstName ?? 'Assura'} ${profile?.lastName ?? 'Admin'}',
                                         style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
+                                          fontSize: 20,
                                           fontWeight: FontWeight.bold,
+                                          color: Colors.black,
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(height: 5),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primaryOrange,
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                        ),
+                                        child: Text(
+                                          profile?.role ?? 'Admin',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    if (isEditMode) {
-                                      // Cancel: Reset fields
-                                      _loadProfile();
-                                      _passwordController.clear();
-                                    }
-                                    isEditMode = !isEditMode;
-                                  });
-                                },
-                                icon: Icon(
-                                  isEditMode ? Icons.close : Icons.edit,
-                                  color: AppColors.primaryBlue,
-                                  size: 28,
+                                IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      if (isEditMode) {
+                                        _loadProfile();
+                                        _passwordController.clear();
+                                      }
+                                      isEditMode = !isEditMode;
+                                    });
+                                  },
+                                  icon: Icon(
+                                    isEditMode ? Icons.close : Icons.edit,
+                                    color: AppColors.primaryBlue,
+                                    size: 28,
+                                  ),
+                                  tooltip:
+                                      isEditMode ? 'Cancel' : 'Edit Profile',
                                 ),
-                                tooltip: isEditMode ? 'Cancel' : 'Edit Profile',
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 30),
-                          _buildField('Username', _usernameController,
-                              editable: true),
-                          const SizedBox(height: 15),
-                          if (isEditMode) ...[
-                            _buildField('First Name', _firstNameController,
-                                editable: true),
-                            const SizedBox(height: 15),
-                            _buildField('Last Name', _lastNameController,
-                                editable: true),
-                          ] else ...[
-                            _buildStaticField('Full Name',
-                                '${profile?.firstName} ${profile?.lastName}'),
-                          ],
-                          const SizedBox(height: 15),
-                          if (isEditMode)
-                            _buildField(
-                                'New Password (Optional)', _passwordController,
-                                editable: true, isPassword: true),
-                          const SizedBox(height: 15),
-                          _buildStaticField(
-                              'Email Address', profile?.email ?? 'N/A'),
-                          const SizedBox(height: 15),
-                          _buildStaticField(
-                              'User Role', profile?.role ?? 'Admin'),
-                          const SizedBox(height: 15),
-                          _buildStaticField('Working Division',
-                              profile?.divisionName ?? 'N/A'),
-                          const SizedBox(height: 15),
-                          _buildField('Telephone Number', _phoneController,
-                              editable: true),
-                          const SizedBox(height: 40),
-                          if (isEditMode)
-                            ElevatedButton(
-                              onPressed: isLoading ? null : _saveChanges,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primaryBlue,
-                                foregroundColor: Colors.white,
-                                minimumSize: const Size(double.infinity, 50),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: isLoading
-                                  ? const CircularProgressIndicator(
-                                      color: Colors.white)
-                                  : const Text('Save Changes',
-                                      style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold)),
+                              ],
                             ),
-                        ],
+                            const SizedBox(height: 30),
+                            _buildField('Username', _usernameController,
+                                validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Username is required';
+                              }
+                              if (value.length < 3) {
+                                return 'Too short';
+                              }
+                              return null;
+                            }),
+                            const SizedBox(height: 15),
+                            if (isEditMode) ...[
+                              _buildField('First Name', _firstNameController,
+                                  validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'First name is required';
+                                }
+                                return null;
+                              }),
+                              const SizedBox(height: 15),
+                              _buildField('Last Name', _lastNameController,
+                                  validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Last name is required';
+                                }
+                                return null;
+                              }),
+                            ] else ...[
+                              _buildStaticField('Full Name',
+                                  '${profile?.firstName} ${profile?.lastName}'),
+                            ],
+                            const SizedBox(height: 15),
+                            if (isEditMode)
+                              _buildField('New Password (Optional)',
+                                  _passwordController, isPassword: true,
+                                  validator: (value) {
+                                if (value != null &&
+                                    value.isNotEmpty &&
+                                    value.length < 6) {
+                                  return 'Min 6 characters';
+                                }
+                                return null;
+                              }),
+                            const SizedBox(height: 15),
+                            _buildStaticField(
+                                'Email Address', profile?.email ?? 'N/A'),
+                            const SizedBox(height: 15),
+                            _buildStaticField(
+                                'User Role', profile?.role ?? 'Admin'),
+                            const SizedBox(height: 15),
+                            _buildStaticField('Working Division',
+                                profile?.divisionName ?? 'N/A'),
+                            const SizedBox(height: 15),
+                            _buildField('Telephone Number', _phoneController,
+                                keyboardType: TextInputType.phone,
+                                validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Phone number is required';
+                              }
+                              if (!RegExp(r'^\d{10}$').hasMatch(value)) {
+                                return 'Enter a valid 10-digit number';
+                              }
+                              return null;
+                            }),
+                            const SizedBox(height: 40),
+                            if (isEditMode)
+                              ElevatedButton(
+                                onPressed: isLoading ? null : _saveChanges,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primaryBlue,
+                                  foregroundColor: Colors.white,
+                                  minimumSize: const Size(double.infinity, 50),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: isLoading
+                                    ? const CircularProgressIndicator(
+                                        color: Colors.white)
+                                    : const Text('Save Changes',
+                                        style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold)),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 40),
-                  ],
+                      const SizedBox(height: 40),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -285,7 +330,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildField(String label, TextEditingController controller,
-      {bool editable = false, bool isPassword = false}) {
+      {bool isPassword = false,
+      TextInputType keyboardType = TextInputType.text,
+      String? Function(String?)? validator}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -294,10 +341,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           style: const TextStyle(color: Colors.grey, fontSize: 13),
         ),
         const SizedBox(height: 6),
-        if (isEditMode && editable)
-          TextField(
+        if (isEditMode)
+          TextFormField(
             controller: controller,
             obscureText: isPassword,
+            keyboardType: keyboardType,
+            validator: validator,
             decoration: InputDecoration(
               filled: true,
               fillColor: const Color(0xFFF0F0F0),
@@ -305,6 +354,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide.none,
               ),
+              errorBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.red, width: 1),
+              ),
+              focusedErrorBorder: const OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.red, width: 1.5),
+              ),
+              errorStyle: const TextStyle(height: 0.8),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
             ),
@@ -345,8 +401,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           child: Text(
             value,
-            style: const TextStyle(
-                fontSize: 15, color: Colors.black54), // Grey text for read-only
+            style: const TextStyle(fontSize: 15, color: Colors.black54),
           ),
         ),
       ],
