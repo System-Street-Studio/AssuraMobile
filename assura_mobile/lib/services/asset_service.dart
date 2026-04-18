@@ -54,4 +54,61 @@ class AssetService with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<bool> updateAssetStatus(AssetModel asset, String newStatus) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final token = _authService.token;
+      if (token == null) throw Exception('Not authenticated');
+
+      final url =
+          Uri.parse('${AppConstants.apiBaseUrl}/api/Assets/${asset.id}');
+
+      final body = {
+        'id': asset.id,
+        'assetCode': asset.assetCode,
+        'assetTag': asset.assetTag,
+        'assetDate': asset.assetDate.toIso8601String(),
+        'status': newStatus,
+        'serialNumber': asset.serialNumber,
+        'purchaseValue': asset.purchaseValue,
+        'warranty': asset.warranty,
+        'notes': asset.notes,
+        'categoryId': asset.categoryId,
+        'divisionId': asset.divisionId,
+        'productId': asset.productId,
+        'supplierId': asset.supplierId,
+        'assignedUserId': asset.assignedUserId,
+      };
+
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: json.encode(body),
+      );
+
+      if (response.statusCode == 200) {
+        final index = _assets.indexWhere((a) => a.id == asset.id);
+        if (index != -1) {
+          _assets[index] = AssetModel.fromJson(json.decode(response.body));
+        }
+        return true;
+      } else {
+        _error = 'Failed to update asset: ${response.statusCode}';
+        return false;
+      }
+    } catch (e) {
+      _error = 'An error occurred: $e';
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }

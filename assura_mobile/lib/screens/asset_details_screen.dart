@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../widgets/app_drawer.dart';
 import '../core/models/asset_model.dart';
+import '../services/asset_service.dart';
 import 'package:intl/intl.dart';
 
 class AssetDetailsScreen extends StatefulWidget {
@@ -16,17 +18,51 @@ class AssetDetailsScreen extends StatefulWidget {
 class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
   late String selectedStatus;
   final List<String> statuses = [
-    'Active',
-    'Repair',
+    'InUse',
+    'InStore',
+    'UnderMaintenance',
     'Discarded',
     'Transferred',
-    'Missing'
+    'Lost'
   ];
+  bool isUpdating = false;
 
   @override
   void initState() {
     super.initState();
     selectedStatus = widget.asset.statusText;
+  }
+
+  Future<void> _updateStatus() async {
+    if (selectedStatus == widget.asset.statusText) {
+      Navigator.pop(context);
+      return;
+    }
+
+    setState(() {
+      isUpdating = true;
+    });
+
+    final success = await Provider.of<AssetService>(context, listen: false)
+        .updateAssetStatus(widget.asset, selectedStatus);
+
+    if (mounted) {
+      setState(() {
+        isUpdating = false;
+      });
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Asset status updated successfully!')),
+        );
+        Navigator.pop(context);
+      } else {
+        final error = Provider.of<AssetService>(context, listen: false).error;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update status: $error')),
+        );
+      }
+    }
   }
 
   @override
@@ -96,7 +132,7 @@ class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
                   _buildStatusDropdown(),
                   const SizedBox(height: 40),
                   ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: isUpdating ? null : _updateStatus,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFAC0000), // Dark red
                       foregroundColor: Colors.white,
@@ -105,9 +141,18 @@ class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: const Text('Ok',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
+                    child: isUpdating
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text('Update',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
@@ -165,11 +210,13 @@ class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
               hint: const Text('Select Status'),
               isExpanded: true,
               icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
-              onChanged: (String? newValue) {
-                setState(() {
-                  selectedStatus = newValue!;
-                });
-              },
+              onChanged: isUpdating
+                  ? null
+                  : (String? newValue) {
+                      setState(() {
+                        selectedStatus = newValue!;
+                      });
+                    },
               items: statuses.map<DropdownMenuItem<String>>((String value) {
                 return DropdownMenuItem<String>(
                   value: value,
