@@ -2,17 +2,21 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/models/user_model.dart';
+import '../core/models/user_profile_model.dart';
 import 'api_service.dart';
 import '../core/constants/app_constants.dart';
+import 'package:http/http.dart' as http;
 
 class AuthService extends ChangeNotifier {
   final ApiService _apiService = ApiService();
   UserModel? _user;
   String? _token;
+  UserProfileModel? _profile;
   bool _isLoading = false;
 
   UserModel? get user => _user;
   String? get token => _token;
+  UserProfileModel? get profile => _profile;
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _token != null;
 
@@ -80,5 +84,63 @@ class AuthService extends ChangeNotifier {
       _user = UserModel.fromJson(jsonDecode(userJson));
     }
     notifyListeners();
+  }
+
+  Future<UserProfileModel?> fetchUserProfile() async {
+    if (_token == null) return null;
+
+    try {
+      final response = await http.get(
+        Uri.parse('${AppConstants.apiBaseUrl}/api/User/profile'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        _profile = UserProfileModel.fromJson(data);
+        notifyListeners();
+        return _profile;
+      }
+    } catch (e) {
+      debugPrint('Error fetching user profile: $e');
+    }
+    return null;
+  }
+
+  Future<bool> updateUserProfile(UserProfileModel updatedProfile,
+      {String? password}) async {
+    if (_token == null) return false;
+
+    try {
+      final response = await http.put(
+        Uri.parse('${AppConstants.apiBaseUrl}/api/User/profile'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: json.encode(updatedProfile.toJson(password: password)),
+      );
+
+      if (response.statusCode == 200) {
+        _profile = updatedProfile;
+        // Also update the short UserModel name if changed
+        if (_user != null) {
+          _user = UserModel(
+            id: _user!.id,
+            userName: updatedProfile.username,
+            name: '${updatedProfile.firstName} ${updatedProfile.lastName}',
+            roles: _user!.roles,
+          );
+        }
+        notifyListeners();
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Error updating user profile: $e');
+    }
+    return false;
   }
 }

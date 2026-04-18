@@ -4,6 +4,7 @@ import '../core/constants/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../widgets/app_drawer.dart';
 import '../services/auth_service.dart';
+import '../core/models/user_profile_model.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -14,38 +15,99 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool isEditMode = false;
+  bool isLoading = true;
 
-  late TextEditingController _usernameController;
-  late TextEditingController _nameController;
-  final TextEditingController _passwordController =
-      TextEditingController(text: '••••••••');
-  final TextEditingController _emailController =
-      TextEditingController(text: 'N/A');
-  final TextEditingController _phoneController =
-      TextEditingController(text: 'N/A');
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    final user = Provider.of<AuthService>(context, listen: false).user;
-    _usernameController = TextEditingController(text: user?.userName ?? '');
-    _nameController = TextEditingController(text: user?.name ?? '');
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final profile = await authService.fetchUserProfile();
+    if (profile != null && mounted) {
+      setState(() {
+        _usernameController.text = profile.username;
+        _firstNameController.text = profile.firstName;
+        _lastNameController.text = profile.lastName;
+        _phoneController.text = profile.phoneNumber ?? '';
+        isLoading = false;
+      });
+    } else if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
   void dispose() {
     _usernameController.dispose();
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _passwordController.dispose();
-    _emailController.dispose();
     _phoneController.dispose();
     super.dispose();
+  }
+
+  Future<void> _saveChanges() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final currentProfile = authService.profile;
+    if (currentProfile == null) return;
+
+    setState(() {
+      isLoading = true;
+    });
+
+    final updatedProfile = UserProfileModel(
+      id: currentProfile.id,
+      username: _usernameController.text,
+      firstName: _firstNameController.text,
+      lastName: _lastNameController.text,
+      email: currentProfile.email,
+      role: currentProfile.role,
+      divisionId: currentProfile.divisionId,
+      divisionName: currentProfile.divisionName,
+      phoneNumber: _phoneController.text,
+    );
+
+    final success = await authService.updateUserProfile(
+      updatedProfile,
+      password:
+          _passwordController.text.isNotEmpty ? _passwordController.text : null,
+    );
+
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+        if (success) {
+          isEditMode = false;
+          _passwordController.clear();
+        }
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success
+              ? 'Profile updated successfully!'
+              : 'Failed to update profile. Please try again.'),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
-    final user = authService.user;
+    final profile = authService.profile;
 
     return Scaffold(
       backgroundColor: AppColors.backgroundGrey,
@@ -71,142 +133,154 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            children: [
-              const Text(
-                'User Profile',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 25),
-
-              // Profile Card
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(25),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(25),
-                ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
                 child: Column(
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const CircleAvatar(
-                          radius: 40,
-                          backgroundColor: AppColors.primaryBlue,
-                          child:
-                              Icon(Icons.person, size: 50, color: Colors.white),
-                        ),
-                        const SizedBox(width: 20),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                    const Text(
+                      'User Profile',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 25),
+
+                    // Profile Card
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(25),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Text(
-                                user?.name ?? 'Assura Admin',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
+                              const CircleAvatar(
+                                radius: 40,
+                                backgroundColor: AppColors.primaryBlue,
+                                child: Icon(Icons.person,
+                                    size: 50, color: Colors.white),
+                              ),
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${profile?.firstName ?? 'Assura'} ${profile?.lastName ?? 'Admin'}',
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primaryOrange,
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        profile?.role ?? 'Admin',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(height: 5),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryOrange,
-                                  borderRadius: BorderRadius.circular(20),
+                              IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    if (isEditMode) {
+                                      // Cancel: Reset fields
+                                      _loadProfile();
+                                      _passwordController.clear();
+                                    }
+                                    isEditMode = !isEditMode;
+                                  });
+                                },
+                                icon: Icon(
+                                  isEditMode ? Icons.close : Icons.edit,
+                                  color: AppColors.primaryBlue,
+                                  size: 28,
                                 ),
-                                child: Text(
-                                  user?.roles.isNotEmpty == true
-                                      ? user!.roles.first
-                                      : 'Admin',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                                tooltip: isEditMode ? 'Cancel' : 'Edit Profile',
                               ),
                             ],
                           ),
-                        ),
-                        IconButton(
-                          onPressed: () {
-                            setState(() {
-                              isEditMode = !isEditMode;
-                            });
-                          },
-                          icon: Icon(
-                            isEditMode ? Icons.close : Icons.edit,
-                            color: AppColors.primaryBlue,
-                            size: 28,
-                          ),
-                          tooltip: isEditMode ? 'Cancel' : 'Edit Profile',
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 30),
-                    _buildField('Username', _usernameController,
-                        editable: true),
-                    const SizedBox(height: 15),
-                    _buildField('Full Name', _nameController, editable: true),
-                    const SizedBox(height: 15),
-                    _buildField('Password', _passwordController,
-                        editable: true, isPassword: true),
-                    const SizedBox(height: 15),
-                    _buildField('Email Address', _emailController,
-                        editable: true),
-                    const SizedBox(height: 15),
-                    _buildStaticField(
-                        'User Role(s)', user?.roles.join(', ') ?? 'Admin'),
-                    const SizedBox(height: 15),
-                    _buildStaticField(
-                        'Working Division', 'Information Technology'),
-                    const SizedBox(height: 15),
-                    _buildField('Telephone Number', _phoneController,
-                        editable: true),
-                    const SizedBox(height: 40),
-                    if (isEditMode)
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            isEditMode = false;
-                          });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Profile updated successfully!')),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryBlue,
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text('Save Changes',
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 30),
+                          _buildField('Username', _usernameController,
+                              editable: true),
+                          const SizedBox(height: 15),
+                          if (isEditMode) ...[
+                            _buildField('First Name', _firstNameController,
+                                editable: true),
+                            const SizedBox(height: 15),
+                            _buildField('Last Name', _lastNameController,
+                                editable: true),
+                          ] else ...[
+                            _buildStaticField('Full Name',
+                                '${profile?.firstName} ${profile?.lastName}'),
+                          ],
+                          const SizedBox(height: 15),
+                          if (isEditMode)
+                            _buildField(
+                                'New Password (Optional)', _passwordController,
+                                editable: true, isPassword: true),
+                          const SizedBox(height: 15),
+                          _buildStaticField(
+                              'Email Address', profile?.email ?? 'N/A'),
+                          const SizedBox(height: 15),
+                          _buildStaticField(
+                              'User Role', profile?.role ?? 'Admin'),
+                          const SizedBox(height: 15),
+                          _buildStaticField('Working Division',
+                              profile?.divisionName ?? 'N/A'),
+                          const SizedBox(height: 15),
+                          _buildField('Telephone Number', _phoneController,
+                              editable: true),
+                          const SizedBox(height: 40),
+                          if (isEditMode)
+                            ElevatedButton(
+                              onPressed: isLoading ? null : _saveChanges,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryBlue,
+                                foregroundColor: Colors.white,
+                                minimumSize: const Size(double.infinity, 50),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: isLoading
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white)
+                                  : const Text('Save Changes',
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold)),
+                            ),
+                        ],
                       ),
+                    ),
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),
-              const SizedBox(height: 40),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 
