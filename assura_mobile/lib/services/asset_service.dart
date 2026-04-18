@@ -111,4 +111,13 @@ class AssetService with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  AssetModel? getAssetByCode(String code) {
+    try {
+      return _assets
+          .firstWhere((a) => a.assetCode.toLowerCase() == code.toLowerCase());
+    } catch (_) {
+      return null;
+    }
+  }
 }

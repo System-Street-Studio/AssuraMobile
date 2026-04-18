@@ -139,6 +139,37 @@ class _AssetManagementScreenState extends State<AssetManagementScreen> {
     );
   }
 
+  void _startScan() async {
+    final String? code = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ScannerScreen()),
+    );
+
+    if (code != null && mounted) {
+      final assetService = Provider.of<AssetService>(context, listen: false);
+      final asset = assetService.getAssetByCode(code);
+
+      if (asset != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AssetDetailsScreen(asset: asset),
+          ),
+        ).then((_) {
+          // Refresh list if status was updated
+          assetService.fetchAssets();
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Asset with code "$code" not found'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final assetService = Provider.of<AssetService>(context);
@@ -339,13 +370,7 @@ class _AssetManagementScreenState extends State<AssetManagementScreen> {
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const ScannerScreen()),
-                          );
-                        },
+                        onPressed: _startScan,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFEBD192),
                           foregroundColor: Colors.black,
