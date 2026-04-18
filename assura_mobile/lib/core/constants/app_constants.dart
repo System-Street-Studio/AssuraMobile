@@ -15,6 +15,7 @@ class AppConstants {
   static const String profileEndpoint = '/api/User/profile';
   static const String dashboardStatsEndpoint = '/api/Admin/dashboard-stats';
   static const String forgotPasswordEndpoint = '/api/Auth/forgot-password';
+  static const String resetPasswordEndpoint = '/api/Auth/reset-password';
 
   // Assets
   static const String logoPath = 'assets/images/LOGO2.png';

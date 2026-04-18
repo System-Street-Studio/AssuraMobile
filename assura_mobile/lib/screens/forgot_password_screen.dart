@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_constants.dart';
+import 'reset_password_screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -187,6 +188,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                               child: const Text('Send Reset Link',
                                   style: TextStyle(fontSize: 16)),
                             ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ResetPasswordScreen(
+                                    initialEmail: _emailController.text,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: const Text('Already have a token?'),
                           ),
                         ],
                       ),

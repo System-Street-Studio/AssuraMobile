@@ -71,6 +71,28 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  // Reset Password method
+  Future<bool> resetPassword(
+      String email, String token, String newPassword) async {
+    _setLoading(true);
+    try {
+      await _apiService.post(
+        AppConstants.resetPasswordEndpoint,
+        body: {
+          'email': email,
+          'token': token,
+          'newPassword': newPassword,
+        },
+      );
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setLoading(false);
+      debugPrint('Error in resetPassword: $e');
+      return false;
+    }
+  }
+
   // Logout method
   Future<void> logout() async {
     _user = null;
