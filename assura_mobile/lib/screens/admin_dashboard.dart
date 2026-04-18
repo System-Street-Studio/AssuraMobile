@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../widgets/app_drawer.dart';
@@ -14,10 +15,15 @@ class AdminDashboard extends StatefulWidget {
 }
 
 class _AdminDashboardState extends State<AdminDashboard> {
+  late NumberFormat _currencyFormat;
+
   @override
   void initState() {
     super.initState();
-    // Fetch stats on load
+    _currencyFormat = NumberFormat.currency(
+      symbol: 'Rs. ',
+      decimalDigits: 0,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<DashboardService>(context, listen: false)
           .fetchDashboardStats();
@@ -75,28 +81,34 @@ class _AdminDashboardState extends State<AdminDashboard> {
               ),
               const SizedBox(height: 15),
               if (isLoading && stats == null)
-                const Center(child: CircularProgressIndicator())
+                const SizedBox(
+                  height: 200,
+                  child: Center(child: CircularProgressIndicator()),
+                )
               else if (error != null && stats == null)
                 Center(
-                  child: Column(
-                    children: [
-                      Text('Error: $error',
-                          style: const TextStyle(color: Colors.red)),
-                      ElevatedButton(
-                        onPressed: () => dashboardService.fetchDashboardStats(),
-                        child: const Text('Try Again'),
-                      ),
-                    ],
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 40.0),
+                    child: Column(
+                      children: [
+                        Text('Error: $error',
+                            style: const TextStyle(color: Colors.red)),
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () =>
+                              dashboardService.fetchDashboardStats(),
+                          child: const Text('Try Again'),
+                        ),
+                      ],
+                    ),
                   ),
                 )
-              else ...[
-                // Overview Cards
-                _buildLargeCard(context, 'Total Users',
-                    '${stats?.totalUsers ?? 0}', AppColors.primaryTeal),
+              else if (stats != null) ...[
+                _buildLargeCard(context, 'Total Users', '${stats.totalUsers}',
+                    AppColors.primaryTeal),
                 const SizedBox(height: 15),
-                _buildLargeCard(context, 'Total Assets',
-                    '${stats?.totalAssets ?? 0}', AppColors.primaryOrange),
-
+                _buildLargeCard(context, 'Total Assets', '${stats.totalAssets}',
+                    AppColors.primaryOrange),
                 const SizedBox(height: 30),
                 const Text(
                   'Division',
@@ -107,16 +119,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   ),
                 ),
                 const SizedBox(height: 15),
-
-                // Division List
-                if (stats?.assetsByDivision.isEmpty ?? true)
+                if (stats.assetsByDivision.isEmpty)
                   const Center(child: Text('No division data available.'))
                 else
-                  ...stats!.assetsByDivision
-                      .map((item) => _buildDivisionCard(
-                          context, item.label, '${item.count}', 'N/A'))
-                      .toList(),
-              ],
+                  ...stats.assetsByDivision.map((item) {
+                    final formattedValue = _currencyFormat.format(item.value);
+                    return _buildDivisionCard(
+                      context,
+                      item.label,
+                      '${item.count}',
+                      formattedValue,
+                    );
+                  }).toList(),
+              ] else if (!isLoading)
+                const Center(child: Text('No data found.')),
               const SizedBox(height: 20),
             ],
           ),
@@ -125,7 +141,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  // colored cards (Total Users, Total Assets)
   Widget _buildLargeCard(
       BuildContext context, String title, String value, Color color) {
     return GestureDetector(
@@ -171,7 +186,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  // Division cards
   Widget _buildDivisionCard(
       BuildContext context, String name, String assets, String value) {
     return GestureDetector(
@@ -222,7 +236,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         const SizedBox(height: 5),
         Text(
           val,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
       ],
     );
