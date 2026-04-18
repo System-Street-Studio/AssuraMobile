@@ -3,8 +3,7 @@ class AssetModel {
   final String assetCode;
   final String? assetTag;
   final DateTime assetDate;
-  final int
-      status; // AssetStatus enum from backend (0: Active, 1: Repair, etc.)
+  final String status; // Status is sent as a String from backend
   final String? serialNumber;
   final double purchaseValue;
   final String? warranty;
@@ -46,44 +45,43 @@ class AssetModel {
 
   factory AssetModel.fromJson(Map<String, dynamic> json) {
     return AssetModel(
-      id: json['id'] ?? 0,
+      id: json['id'] is int
+          ? json['id']
+          : int.tryParse(json['id']?.toString() ?? '0') ?? 0,
       assetCode: json['assetCode'] ?? '',
       assetTag: json['assetTag'],
       assetDate:
           DateTime.parse(json['assetDate'] ?? DateTime.now().toIso8601String()),
-      status: json['status'] ?? 0,
+      status: json['status']?.toString() ?? 'Active',
       serialNumber: json['serialNumber'],
-      purchaseValue: (json['purchaseValue'] ?? 0).toDouble(),
+      purchaseValue: json['purchaseValue'] is num
+          ? (json['purchaseValue'] as num).toDouble()
+          : double.tryParse(json['purchaseValue']?.toString() ?? '0') ?? 0.0,
       warranty: json['warranty'],
       notes: json['notes'],
       qrCode: json['qrCode'],
-      categoryId: json['categoryId'] ?? 0,
+      categoryId: json['categoryId'] is int
+          ? json['categoryId']
+          : int.tryParse(json['categoryId']?.toString() ?? '0') ?? 0,
       categoryName: json['categoryName'] ?? 'N/A',
-      divisionId: json['divisionId'] ?? 0,
+      divisionId: json['divisionId'] is int
+          ? json['divisionId']
+          : int.tryParse(json['divisionId']?.toString() ?? '0') ?? 0,
       divisionName: json['divisionName'] ?? 'N/A',
-      productId: json['productId'] ?? 0,
+      productId: json['productId'] is int
+          ? json['productId']
+          : int.tryParse(json['productId']?.toString() ?? '0') ?? 0,
       productName: json['productName'] ?? 'N/A',
-      supplierId: json['supplierId'] ?? 0,
+      supplierId: json['supplierId'] is int
+          ? json['supplierId']
+          : int.tryParse(json['supplierId']?.toString() ?? '0') ?? 0,
       supplierName: json['supplierName'] ?? 'N/A',
-      assignedUserId: json['assignedUserId'],
+      assignedUserId: json['assignedUserId'] is int
+          ? json['assignedUserId']
+          : int.tryParse(json['assignedUserId']?.toString() ?? ''),
       assignedUserName: json['assignedUserName'],
     );
   }
 
-  String get statusText {
-    switch (status) {
-      case 0:
-        return 'Active';
-      case 1:
-        return 'Repair';
-      case 2:
-        return 'Discarded';
-      case 3:
-        return 'Transferred';
-      case 4:
-        return 'Missing';
-      default:
-        return 'Unknown';
-    }
-  }
+  String get statusText => status;
 }

@@ -15,8 +15,8 @@ class DashboardStatsModel {
 
   factory DashboardStatsModel.fromJson(Map<String, dynamic> json) {
     return DashboardStatsModel(
-      totalAssets: json['totalAssets'] ?? 0,
-      totalUsers: json['totalUsers'] ?? 0,
+      totalAssets: _toInt(json['totalAssets']),
+      totalUsers: _toInt(json['totalUsers']),
       assetsByDivision: (json['assetsByDivision'] as List?)
               ?.map((i) => StatItemModel.fromJson(i))
               .toList() ??
@@ -31,6 +31,12 @@ class DashboardStatsModel {
           [],
     );
   }
+
+  static int _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value == null) return 0;
+    return int.tryParse(value.toString()) ?? 0;
+  }
 }
 
 class StatItemModel {
@@ -44,8 +50,10 @@ class StatItemModel {
 
   factory StatItemModel.fromJson(Map<String, dynamic> json) {
     return StatItemModel(
-      label: json['label'] ?? '',
-      count: json['count'] ?? 0,
+      label: json['label']?.toString() ?? '',
+      count: json['count'] is int
+          ? json['count']
+          : int.tryParse(json['count']?.toString() ?? '0') ?? 0,
     );
   }
 }
