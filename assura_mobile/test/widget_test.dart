@@ -1,30 +1,49 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:assura_mobile/main.dart';
+import 'package:assura_mobile/services/auth_service.dart';
+import 'package:assura_mobile/services/dashboard_service.dart';
+import 'package:assura_mobile/services/asset_service.dart';
+import 'package:assura_mobile/screens/splash_screen.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  testWidgets('App starts with SplashScreen smoke test',
+      (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    // We wrap MyApp in Providers just like in main.dart to avoid ProviderNotFoundException
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => AuthService()),
+          ChangeNotifierProxyProvider<AuthService, DashboardService>(
+            create: (context) => DashboardService(
+              Provider.of<AuthService>(context, listen: false),
+            ),
+            update: (context, auth, previous) =>
+                previous ?? DashboardService(auth),
+          ),
+          ChangeNotifierProxyProvider<AuthService, AssetService>(
+            create: (context) => AssetService(
+              Provider.of<AuthService>(context, listen: false),
+            ),
+            update: (context, auth, previous) => previous ?? AssetService(auth),
+          ),
+        ],
+        child: const MyApp(),
+      ),
+    );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Verify that the SplashScreen is present.
+    expect(find.byType(SplashScreen), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // SplashScreen has a 3-second timer. We need to wait for it to finish
+    // or use pumpAndSettle to avoid "timers pending" error.
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
   });
 }
