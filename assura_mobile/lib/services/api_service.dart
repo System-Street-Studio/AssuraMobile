@@ -52,6 +52,7 @@ class ApiService {
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'ngrok-skip-browser-warning': 'true',
     };
     if (customHeaders != null) {
       headers.addAll(customHeaders);

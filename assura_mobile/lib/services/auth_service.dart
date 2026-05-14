@@ -134,6 +134,7 @@ class AuthService extends ChangeNotifier {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $_token',
+          'ngrok-skip-browser-warning': 'true',
         },
       );
 
@@ -159,6 +160,7 @@ class AuthService extends ChangeNotifier {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $_token',
+          'ngrok-skip-browser-warning': 'true',
         },
         body: json.encode(updatedProfile.toJson(password: password)),
       );
