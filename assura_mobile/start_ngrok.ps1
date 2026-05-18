@@ -17,11 +17,11 @@ try {
 if ($null -eq $tunnels) {
     Write-Host "Ngrok is not running. Starting ngrok on port $BackendPort..." -ForegroundColor Yellow
     # Start ngrok in a new window
-    Start-Process npx -ArgumentList "ngrok http $BackendPort" -WindowStyle Minimized
+    Start-Process npx.cmd -ArgumentList "ngrok http $BackendPort" -WindowStyle Minimized
     
     # Wait for ngrok to initialize
     Write-Host "Waiting for ngrok to initialize..."
-    Start-Sleep -Seconds 5
+    Start-Sleep -Seconds 10
     
     try {
         $tunnels = Invoke-RestMethod -Uri "http://localhost:4040/api/tunnels"
