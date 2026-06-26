@@ -9,7 +9,7 @@ class AppConstants {
 
   // API Endpoints (Placeholders)
   static const String apiBaseUrl =
-      'https://commence-stash-dipped.ngrok-free.dev'; // Ngrok URL
+      'http://10.0.2.2:5000'; // Emulator localhost
   static const String healthEndpoint = '/health';
   static const String loginEndpoint = '/api/Auth/login';
   static const String profileEndpoint = '/api/User/profile';
