@@ -5,7 +5,9 @@ import '../core/constants/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../widgets/app_drawer.dart';
 import '../services/dashboard_service.dart';
-import 'asset_management_screen.dart';
+import '../services/asset_service.dart';
+import 'scanner_screen.dart';
+import 'asset_details_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -27,7 +29,40 @@ class _AdminDashboardState extends State<AdminDashboard> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<DashboardService>(context, listen: false)
           .fetchDashboardStats();
+      Provider.of<AssetService>(context, listen: false).fetchAssets();
     });
+  }
+
+  void _startScan() async {
+    final String? code = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ScannerScreen()),
+    );
+
+    if (code != null && mounted) {
+      final assetService = Provider.of<AssetService>(context, listen: false);
+      final asset = assetService.getAssetByCode(code);
+
+      if (asset != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AssetDetailsScreen(asset: asset),
+          ),
+        ).then((_) {
+          // Refresh data after returning
+          Provider.of<DashboardService>(context, listen: false).fetchDashboardStats();
+          assetService.fetchAssets();
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Asset with code "$code" not found'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -62,62 +97,104 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => dashboardService.fetchDashboardStats(),
+        onRefresh: () async {
+          dashboardService.fetchDashboardStats();
+          Provider.of<AssetService>(context, listen: false).fetchAssets();
+        },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Center(
-                child: Text(
+          child: SizedBox(
+            // Use the remaining screen height to center the content
+            height: MediaQuery.of(context).size.height - kToolbarHeight - 80,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Text(
                   'Overview',
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
                 ),
-              ),
-              const SizedBox(height: 15),
-              if (isLoading && stats == null)
-                const SizedBox(
-                  height: 200,
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else if (error != null && stats == null)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 40.0),
+                const SizedBox(height: 40),
+                if (isLoading && stats == null)
+                  const CircularProgressIndicator()
+                else if (error != null && stats == null)
+                  Column(
+                    children: [
+                      Text('Error: $error',
+                          style: const TextStyle(color: Colors.red)),
+                      const SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () =>
+                            dashboardService.fetchDashboardStats(),
+                        child: const Text('Try Again'),
+                      ),
+                    ],
+                  )
+                else if (stats != null) ...[
+                  _buildLargeCard(context, 'Total Assets', '${stats.totalAssets}',
+                      AppColors.primaryOrange),
+                  const SizedBox(height: 30),
+                  
+                  // Track Assets Card (Replaces the separate screen)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(25),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryRed,
+                      borderRadius: BorderRadius.circular(25),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primaryRed.withOpacity(0.4),
+                          blurRadius: 15,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
                     child: Column(
                       children: [
-                        Text('Error: $error',
-                            style: const TextStyle(color: Colors.red)),
+                        const Text(
+                          'Scan the QR code on the asset',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                         const SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: () =>
-                              dashboardService.fetchDashboardStats(),
-                          child: const Text('Try Again'),
+                        ElevatedButton.icon(
+                          onPressed: _startScan,
+                          icon: const Icon(Icons.qr_code_scanner),
+                          label: const Text(
+                            'Scan Now',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFEBD192),
+                            foregroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 40, vertical: 15),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                )
-              else if (stats != null) ...[
-                const SizedBox(height: 20),
-                _buildLargeCard(context, 'Total Assets', '${stats.totalAssets}',
-                    AppColors.primaryOrange),
-                const SizedBox(height: 30),
-                const Center(
-                  child: Text(
-                    'Tap the card above to scan and verify assets.',
-                    style: TextStyle(color: Colors.black54, fontSize: 16),
-                  ),
-                ),
-              ] else if (!isLoading)
-                const Center(child: Text('No data found.')),
-              const SizedBox(height: 20),
-            ],
+
+                ] else if (!isLoading)
+                  const Text('No data found.'),
+              ],
+            ),
           ),
         ),
       ),
@@ -126,48 +203,55 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Widget _buildLargeCard(
       BuildContext context, String title, String value, Color color) {
-    return GestureDetector(
-      onTap: () {
-        if (title == 'Total Assets') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => const AssetManagementScreen()),
-          );
-        }
-      },
-      child: Container(
-        width: double.infinity,
-        height: 120,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-            ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Text(
-                value,
+    return Container(
+      width: double.infinity,
+      height: 180, 
+      padding: const EdgeInsets.all(30),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.4),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
                 style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                ),
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600),
+              ),
+              const Icon(
+                Icons.inventory_2, 
+                color: Colors.white,
+                size: 32,
+              ),
+            ],
+          ),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 48, 
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
-
-
 }
