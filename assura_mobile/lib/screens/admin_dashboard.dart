@@ -104,33 +104,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   ),
                 )
               else if (stats != null) ...[
-                _buildLargeCard(context, 'Total Users', '${stats.totalUsers}',
-                    AppColors.primaryTeal),
-                const SizedBox(height: 15),
+                const SizedBox(height: 20),
                 _buildLargeCard(context, 'Total Assets', '${stats.totalAssets}',
                     AppColors.primaryOrange),
                 const SizedBox(height: 30),
-                const Text(
-                  'Division',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
+                const Center(
+                  child: Text(
+                    'Tap the card above to scan and verify assets.',
+                    style: TextStyle(color: Colors.black54, fontSize: 16),
                   ),
                 ),
-                const SizedBox(height: 15),
-                if (stats.assetsByDivision.isEmpty)
-                  const Center(child: Text('No division data available.'))
-                else
-                  ...stats.assetsByDivision.map((item) {
-                    final formattedValue = _currencyFormat.format(item.value);
-                    return _buildDivisionCard(
-                      context,
-                      item.label,
-                      '${item.count}',
-                      formattedValue,
-                    );
-                  }).toList(),
               ] else if (!isLoading)
                 const Center(child: Text('No data found.')),
               const SizedBox(height: 20),
@@ -186,59 +169,5 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildDivisionCard(
-      BuildContext context, String name, String assets, String value) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => const AssetManagementScreen()),
-        );
-      },
-      child: Container(
-        width: double.infinity,
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(
-              color: AppColors.primaryBlue.withOpacity(0.5), width: 1.5),
-        ),
-        child: Column(
-          children: [
-            Text(
-              name,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 15),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatItem('Total Assets', assets),
-                _buildStatItem('Total Value', value),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _buildStatItem(String label, String val) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12, color: Colors.black54),
-        ),
-        const SizedBox(height: 5),
-        Text(
-          val,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-      ],
-    );
-  }
 }
