@@ -17,15 +17,9 @@ class AdminDashboard extends StatefulWidget {
 }
 
 class _AdminDashboardState extends State<AdminDashboard> {
-  late NumberFormat _currencyFormat;
-
   @override
   void initState() {
     super.initState();
-    _currencyFormat = NumberFormat.currency(
-      symbol: 'Rs. ',
-      decimalDigits: 0,
-    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<DashboardService>(context, listen: false)
           .fetchDashboardStats();

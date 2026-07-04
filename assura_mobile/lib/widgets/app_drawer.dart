@@ -4,7 +4,7 @@ import '../core/constants/app_colors.dart';
 import '../services/auth_service.dart';
 import '../screens/login_screen.dart';
 import '../screens/admin_dashboard.dart';
-import '../screens/asset_management_screen.dart';
+
 import '../screens/profile_screen.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -111,14 +111,7 @@ class AppDrawer extends StatelessWidget {
               MaterialPageRoute(builder: (context) => const AdminDashboard()),
             );
           }),
-          _buildDrawerItem(
-              context, Icons.location_on_outlined, 'Assets Tracking', () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => const AssetManagementScreen()),
-            );
-          }),
+
           const Spacer(),
           _buildDrawerItem(context, Icons.logout_outlined, 'Logout', () async {
             await authService.logout();
