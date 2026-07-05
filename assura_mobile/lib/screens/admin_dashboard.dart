@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_constants.dart';
 import '../widgets/app_drawer.dart';
@@ -45,6 +44,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           ),
         ).then((_) {
           // Refresh data after returning
+          if (!mounted) return;
           Provider.of<DashboardService>(context, listen: false).fetchDashboardStats();
           assetService.fetchAssets();
         });

@@ -127,9 +127,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
                         ],
                       ),
                       child: _isSuccess
-                          ? Column(
+                          ? const Column(
                               mainAxisSize: MainAxisSize.min,
-                              children: const [
+                              children: [
                                 Icon(Icons.check_circle_outline,
                                     color: Colors.green, size: 60),
                                 SizedBox(height: 24),
@@ -205,10 +205,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
                                     hintText: 'New Password',
                                   ),
                                   validator: (value) {
-                                    if (value == null || value.isEmpty)
+                                    if (value == null || value.isEmpty) {
                                       return 'Required';
-                                    if (value.length < 6)
+                                    }
+                                    if (value.length < 6) {
                                       return 'Password too short';
+                                    }
                                     return null;
                                   },
                                 ),
@@ -222,8 +224,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
                                     hintText: 'Confirm Password',
                                   ),
                                   validator: (value) {
-                                    if (value != _passwordController.text)
+                                    if (value != _passwordController.text) {
                                       return 'Passwords do not match';
+                                    }
                                     return null;
                                   },
                                 ),
