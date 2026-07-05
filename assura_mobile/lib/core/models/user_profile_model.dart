@@ -39,7 +39,7 @@ class UserProfileModel {
     );
   }
 
-  Map<String, dynamic> toJson({String? password}) {
+  Map<String, dynamic> toJson({String? password, String? currentPassword}) {
     final Map<String, dynamic> data = {
       'userId': id,
       'username': username,
@@ -50,6 +50,9 @@ class UserProfileModel {
     };
     if (password != null && password.isNotEmpty) {
       data['password'] = password;
+      if (currentPassword != null && currentPassword.isNotEmpty) {
+        data['currentPassword'] = currentPassword;
+      }
     }
     return data;
   }

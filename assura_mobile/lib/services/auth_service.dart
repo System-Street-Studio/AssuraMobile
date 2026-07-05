@@ -162,7 +162,7 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<bool> updateUserProfile(UserProfileModel updatedProfile,
-      {String? password}) async {
+      {String? password, String? currentPassword}) async {
     if (_token == null) return false;
 
     try {
@@ -173,7 +173,7 @@ class AuthService extends ChangeNotifier {
           'Authorization': 'Bearer $_token',
           'ngrok-skip-browser-warning': 'true',
         },
-        body: json.encode(updatedProfile.toJson(password: password)),
+        body: json.encode(updatedProfile.toJson(password: password, currentPassword: currentPassword)),
       );
 
       if (response.statusCode == 200) {

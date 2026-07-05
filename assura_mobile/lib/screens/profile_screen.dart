@@ -21,6 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _currentPasswordController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
 
@@ -53,6 +54,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _usernameController.dispose();
     _firstNameController.dispose();
     _lastNameController.dispose();
+    _currentPasswordController.dispose();
     _passwordController.dispose();
     _phoneController.dispose();
     super.dispose();
@@ -87,6 +89,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       updatedProfile,
       password:
           _passwordController.text.isNotEmpty ? _passwordController.text : null,
+      currentPassword:
+          _currentPasswordController.text.isNotEmpty ? _currentPasswordController.text : null,
     );
 
     if (mounted) {
@@ -94,6 +98,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         isLoading = false;
         if (success) {
           isEditMode = false;
+          _currentPasswordController.clear();
           _passwordController.clear();
         }
       });
@@ -265,17 +270,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   '${profile?.firstName} ${profile?.lastName}'),
                             ],
                             const SizedBox(height: 15),
-                            if (isEditMode)
-                              _buildField('New Password (Optional)',
-                                  _passwordController, isPassword: true,
+                            if (isEditMode) ...[
+                              _buildField('Current Password (Required for changing password)',
+                                  _currentPasswordController, isPassword: true,
                                   validator: (value) {
-                                if (value != null &&
-                                    value.isNotEmpty &&
-                                    value.length < 6) {
-                                  return 'Min 6 characters';
+                                if (_passwordController.text.isNotEmpty && (value == null || value.isEmpty)) {
+                                  return 'Current password required to set a new password';
                                 }
                                 return null;
                               }),
+                              const SizedBox(height: 15),
+                              _buildField('New Password (Optional)',
+                                  _passwordController, isPassword: true,
+                                  validator: (value) {
+                                if (value != null && value.isNotEmpty) {
+                                  if (value.length < 8) return 'Min 8 characters';
+                                  if (!RegExp(r'(?=.*[a-z])').hasMatch(value)) return 'Need lowercase letter';
+                                  if (!RegExp(r'(?=.*[A-Z])').hasMatch(value)) return 'Need uppercase letter';
+                                  if (!RegExp(r'(?=.*\d)').hasMatch(value)) return 'Need number';
+                                  if (!RegExp(r'(?=.*[@$!%*?&])').hasMatch(value)) return r'Need special char (@$!%*?&)';
+                                }
+                                return null;
+                              }),
+                            ],
                             const SizedBox(height: 15),
                             _buildStaticField(
                                 'Email Address', profile?.email ?? 'N/A'),
