@@ -108,8 +108,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 const Text(
                   'Overview',
                   style: TextStyle(
+                    fontFamily: 'Jost',
                     fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: Colors.black87,
                   ),
                 ),
@@ -137,7 +138,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   // Track Assets Card (Replaces the separate screen)
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(25),
+                    padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 35),
                     decoration: BoxDecoration(
                       color: AppColors.primaryRed,
                       borderRadius: BorderRadius.circular(25),
@@ -154,31 +155,34 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         const Text(
                           'Scan the QR code on the asset',
                           style: TextStyle(
+                            fontFamily: 'Jost',
                             color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 25),
                         ElevatedButton.icon(
                           onPressed: _startScan,
-                          icon: const Icon(Icons.qr_code_scanner),
+                          icon: const Icon(Icons.qr_code_scanner, color: Colors.black, size: 22),
                           label: const Text(
                             'Scan Now',
                             style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
+                              fontFamily: 'Jost',
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                              fontSize: 16,
                             ),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFEBD192),
-                            foregroundColor: Colors.black,
+                            backgroundColor: AppColors.primaryBeige,
+                            elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 40, vertical: 15),
+                                horizontal: 24, vertical: 12),
                           ),
                         ),
                       ],
@@ -222,12 +226,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
               Text(
                 title,
                 style: const TextStyle(
+                    fontFamily: 'Jost',
                     color: Colors.white,
-                    fontSize: 22,
+                    fontSize: 20,
                     fontWeight: FontWeight.w600),
               ),
               const Icon(
-                Icons.inventory_2, 
+                Icons.archive, 
                 color: Colors.white,
                 size: 32,
               ),
@@ -238,9 +243,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
             child: Text(
               value,
               style: const TextStyle(
+                fontFamily: 'Jost',
                 color: Colors.white,
-                fontSize: 48, 
-                fontWeight: FontWeight.bold,
+                fontSize: 64, 
+                fontWeight: FontWeight.w600,
+                height: 1.0,
               ),
             ),
           ),
