@@ -35,14 +35,25 @@ class AuthService extends ChangeNotifier {
 
       final authResponse = AuthResponseModel.fromJson(response);
 
-      // Check if user is Admin
-      if (!authResponse.user.isAdmin) {
-        _setLoading(false);
-        throw Exception('Only Admin users can access the mobile app.');
+      _token = authResponse.token;
+      _user = authResponse.user;
+
+      bool isAuthorized = _user!.isAdmin;
+
+      if (!isAuthorized) {
+        final profile = await fetchUserProfile();
+        if (profile != null && profile.divisionName?.toLowerCase() == 'admin') {
+          isAuthorized = true;
+        }
       }
 
-      _user = authResponse.user;
-      _token = authResponse.token;
+      if (!isAuthorized) {
+        _token = null;
+        _user = null;
+        _profile = null;
+        _setLoading(false);
+        throw Exception('Access denied. Only Admin division employees are allowed.');
+      }
 
       await _saveAuthData(_token!, _user!);
       _setLoading(false);
@@ -130,7 +141,7 @@ class AuthService extends ChangeNotifier {
 
     try {
       final response = await http.get(
-        Uri.parse('${AppConstants.apiBaseUrl}/api/User/profile'),
+        Uri.parse('${AppConstants.apiBaseUrl}/api/users/profile'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $_token',
@@ -156,7 +167,7 @@ class AuthService extends ChangeNotifier {
 
     try {
       final response = await http.put(
-        Uri.parse('${AppConstants.apiBaseUrl}/api/User/profile'),
+        Uri.parse('${AppConstants.apiBaseUrl}/api/users/profile'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $_token',
