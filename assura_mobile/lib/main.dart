@@ -6,6 +6,7 @@ import 'services/asset_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/constants/app_constants.dart';
 import 'screens/splash_screen.dart';
+import 'widgets/network_connectivity_wrapper.dart';
 
 void main() {
   runApp(
@@ -40,6 +41,11 @@ class MyApp extends StatelessWidget {
       title: AppConstants.appName,
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        return NetworkConnectivityWrapper(
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       home: const SplashScreen(),
     );
   }
