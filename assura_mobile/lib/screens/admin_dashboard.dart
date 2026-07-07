@@ -106,7 +106,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const Text(
-                  'Overview',
+                  'Assura Mobile',
                   style: TextStyle(
                     fontFamily: 'Jost',
                     fontSize: 24,
