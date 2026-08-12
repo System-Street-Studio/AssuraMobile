@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../core/constants/app_colors.dart';
@@ -91,59 +92,110 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('New Password'),
+        title: const Text('New Password', style: TextStyle(color: Color(0xFFF8FAFC), fontFamily: 'Jost')),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        foregroundColor: AppColors.primaryBlue,
+        iconTheme: const IconThemeData(color: Color(0xFFF8FAFC)),
       ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(color: Colors.white),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0F172A), // Slate 900
+              Color(0xFF1E293B), // Slate 800
+            ],
+          ),
+        ),
         child: Stack(
           children: [
             if (!_isLoading) ...[
+              // Abstract glowing orbs in background
+              Positioned(
+                left: -100,
+                top: -100,
+                child: Container(
+                  width: 300,
+                  height: 300,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF818CF8).withOpacity(0.15),
+                        blurRadius: 50,
+                        spreadRadius: 50,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(
+                right: -100,
+                bottom: -100,
+                child: Container(
+                  width: 300,
+                  height: 300,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4F46E5).withOpacity(0.15),
+                        blurRadius: 50,
+                        spreadRadius: 50,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               Center(
                 child: SingleChildScrollView(
                   child: Form(
                     key: _formKey,
-                    child: Container(
-                      width: 304,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 32),
-                      decoration: ShapeDecoration(
-                        color: AppColors.cardBackground,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        shadows: const [
-                          BoxShadow(
-                            color: Color(0x3F000000),
-                            blurRadius: 4,
-                            offset: Offset(-4, 4),
-                            spreadRadius: 0,
-                          )
-                        ],
-                      ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                        child: Container(
+                          width: 320,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 36),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1E293B).withOpacity(0.6), // Glass background
+                            border: Border.all(color: const Color(0xFF94A3B8).withOpacity(0.15)),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              )
+                            ],
+                          ),
                       child: _isSuccess
                           ? const Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(Icons.check_circle_outline,
-                                    color: Colors.green, size: 60),
+                                    color: Colors.greenAccent, size: 60),
                                 SizedBox(height: 24),
                                 Text(
                                   'Success!',
                                   style: TextStyle(
                                       fontSize: 22,
-                                      fontWeight: FontWeight.bold),
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFFF8FAFC),
+                                      fontFamily: 'Jost'),
                                 ),
                                 SizedBox(height: 12),
                                 Text(
                                   'Your password has been reset successfully. Redirecting to login...',
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(color: Colors.black54),
+                                  style: TextStyle(color: Color(0xFF94A3B8), fontFamily: 'Jost'),
                                 ),
                               ],
                             )
@@ -154,9 +206,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
                                   'Set New Password',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    color: AppColors.primaryBlue,
+                                    color: Color(0xFFF8FAFC), // Slate 50
                                     fontSize: 22,
                                     fontWeight: FontWeight.bold,
+                                    fontFamily: 'Jost',
                                   ),
                                 ),
                                 const SizedBox(height: 12),
@@ -164,18 +217,43 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
                                   'Enter the token received in your email and choose a new password.',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
-                                    color: Colors.black54,
+                                    color: Color(0xFF94A3B8), // Slate 400
                                     fontSize: 14,
+                                    fontFamily: 'Jost',
                                   ),
                                 ),
                                 const SizedBox(height: 32),
                                 TextFormField(
                                   controller: _emailController,
                                   keyboardType: TextInputType.emailAddress,
-                                  decoration: const InputDecoration(
-                                    prefixIcon: Icon(Icons.email_outlined,
-                                        size: 20, color: AppColors.textGrey),
+                                  style: const TextStyle(color: Color(0xFFF8FAFC)), // Slate 50
+                                  decoration: InputDecoration(
+                                    prefixIcon: const Icon(Icons.email_outlined,
+                                        size: 20, color: Color(0xFF94A3B8)),
                                     hintText: 'Email Address',
+                                    hintStyle: const TextStyle(color: Color(0xFF64748B)), // Slate 500
+                                    filled: true,
+                                    fillColor: const Color(0xFF0F172A).withOpacity(0.5), // Slate 900
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: const Color(0xFF94A3B8).withOpacity(0.2)),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: const Color(0xFF94A3B8).withOpacity(0.2)),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Color(0xFF818CF8)), // Indigo
+                                    ),
+                                    errorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Colors.red, width: 1),
+                                    ),
+                                    focusedErrorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Colors.red, width: 1.5),
+                                    ),
                                   ),
                                   validator: (value) =>
                                       value == null || value.isEmpty
@@ -185,10 +263,34 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
                                 const SizedBox(height: 16),
                                 TextFormField(
                                   controller: _tokenController,
-                                  decoration: const InputDecoration(
-                                    prefixIcon: Icon(Icons.vpn_key_outlined,
-                                        size: 20, color: AppColors.textGrey),
+                                  style: const TextStyle(color: Color(0xFFF8FAFC)), // Slate 50
+                                  decoration: InputDecoration(
+                                    prefixIcon: const Icon(Icons.vpn_key_outlined,
+                                        size: 20, color: Color(0xFF94A3B8)),
                                     hintText: 'Reset Token',
+                                    hintStyle: const TextStyle(color: Color(0xFF64748B)), // Slate 500
+                                    filled: true,
+                                    fillColor: const Color(0xFF0F172A).withOpacity(0.5), // Slate 900
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: const Color(0xFF94A3B8).withOpacity(0.2)),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: const Color(0xFF94A3B8).withOpacity(0.2)),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Color(0xFF818CF8)), // Indigo
+                                    ),
+                                    errorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Colors.red, width: 1),
+                                    ),
+                                    focusedErrorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Colors.red, width: 1.5),
+                                    ),
                                   ),
                                   validator: (value) =>
                                       value == null || value.isEmpty
@@ -199,10 +301,34 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
                                 TextFormField(
                                   controller: _passwordController,
                                   obscureText: true,
-                                  decoration: const InputDecoration(
-                                    prefixIcon: Icon(Icons.lock_outline,
-                                        size: 20, color: AppColors.textGrey),
+                                  style: const TextStyle(color: Color(0xFFF8FAFC)), // Slate 50
+                                  decoration: InputDecoration(
+                                    prefixIcon: const Icon(Icons.lock_outline,
+                                        size: 20, color: Color(0xFF94A3B8)),
                                     hintText: 'New Password',
+                                    hintStyle: const TextStyle(color: Color(0xFF64748B)), // Slate 500
+                                    filled: true,
+                                    fillColor: const Color(0xFF0F172A).withOpacity(0.5), // Slate 900
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: const Color(0xFF94A3B8).withOpacity(0.2)),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: const Color(0xFF94A3B8).withOpacity(0.2)),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Color(0xFF818CF8)), // Indigo
+                                    ),
+                                    errorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Colors.red, width: 1),
+                                    ),
+                                    focusedErrorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Colors.red, width: 1.5),
+                                    ),
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
@@ -218,10 +344,34 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
                                 TextFormField(
                                   controller: _confirmPasswordController,
                                   obscureText: true,
-                                  decoration: const InputDecoration(
-                                    prefixIcon: Icon(Icons.lock_reset,
-                                        size: 20, color: AppColors.textGrey),
+                                  style: const TextStyle(color: Color(0xFFF8FAFC)), // Slate 50
+                                  decoration: InputDecoration(
+                                    prefixIcon: const Icon(Icons.lock_reset,
+                                        size: 20, color: Color(0xFF94A3B8)),
                                     hintText: 'Confirm Password',
+                                    hintStyle: const TextStyle(color: Color(0xFF64748B)), // Slate 500
+                                    filled: true,
+                                    fillColor: const Color(0xFF0F172A).withOpacity(0.5), // Slate 900
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: const Color(0xFF94A3B8).withOpacity(0.2)),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: const Color(0xFF94A3B8).withOpacity(0.2)),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Color(0xFF818CF8)), // Indigo
+                                    ),
+                                    errorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Colors.red, width: 1),
+                                    ),
+                                    focusedErrorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Colors.red, width: 1.5),
+                                    ),
                                   ),
                                   validator: (value) {
                                     if (value != _passwordController.text) {
@@ -233,11 +383,20 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
                                 const SizedBox(height: 32),
                                 SizedBox(
                                   width: double.infinity,
-                                  height: 45,
+                                  height: 48,
                                   child: ElevatedButton(
                                     onPressed: _handleReset,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF4F46E5), // Solid indigo
+                                      foregroundColor: Colors.white,
+                                      elevation: 4,
+                                      shadowColor: const Color(0xFF4F46E5).withOpacity(0.5),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
                                     child: const Text('Update Password',
-                                        style: TextStyle(fontSize: 16)),
+                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Jost')),
                                   ),
                                 ),
                               ],
@@ -246,7 +405,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
                   ),
                 ),
               ),
-            ],
+            ),
+          ),
+        ],
             if (_isLoading)
               Center(
                 child: RotationTransition(

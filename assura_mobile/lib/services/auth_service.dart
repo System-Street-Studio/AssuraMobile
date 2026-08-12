@@ -20,6 +20,12 @@ class AuthService extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isAuthenticated => _token != null;
 
+  bool get isPendingUser {
+    final isPendingIdentity = _user?.roles.contains('PendingAssignment') ?? false;
+    final divId = _profile?.divisionId;
+    return isPendingIdentity && (divId == null || divId == 0);
+  }
+
   AuthService() {
     _loadAuthData();
   }
