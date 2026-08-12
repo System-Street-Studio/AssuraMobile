@@ -5,6 +5,7 @@ import '../core/constants/app_constants.dart';
 import '../widgets/app_drawer.dart';
 import '../services/dashboard_service.dart';
 import '../services/asset_service.dart';
+import '../services/auth_service.dart';
 import 'scanner_screen.dart';
 import 'asset_details_screen.dart';
 
@@ -62,9 +63,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   Widget build(BuildContext context) {
     final dashboardService = Provider.of<DashboardService>(context);
+    final authService = Provider.of<AuthService>(context);
+    
     final stats = dashboardService.stats;
     final isLoading = dashboardService.isLoading;
     final error = dashboardService.error;
+    
+    final isPendingUser = authService.profile?.divisionId == null;
 
     return Scaffold(
       backgroundColor: AppColors.backgroundGrey,
@@ -90,7 +95,57 @@ class _AdminDashboardState extends State<AdminDashboard> {
           const SizedBox(width: 8),
         ],
       ),
-      body: RefreshIndicator(
+      body: isPendingUser 
+        ? Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.info_outline,
+                    color: Colors.orange,
+                    size: 64,
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Account Under Review',
+                    style: TextStyle(
+                      fontFamily: 'Jost',
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Your account is under review, wait for HR review.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Jost',
+                      fontSize: 16,
+                      color: Colors.black54,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        : RefreshIndicator(
         onRefresh: () async {
           dashboardService.fetchDashboardStats();
           Provider.of<AssetService>(context, listen: false).fetchAssets();
