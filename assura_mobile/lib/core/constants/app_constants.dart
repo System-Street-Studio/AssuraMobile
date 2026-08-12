@@ -9,7 +9,7 @@ class AppConstants {
 
   // API Endpoints (Placeholders)
   static const String apiBaseUrl =
-      'http://10.217.189.91:5000'; // Physical device hotspot IP
+      'http://10.0.2.2:5000'; // Default Android Emulator IP for localhost
   static const String healthEndpoint = '/health';
   static const String loginEndpoint = '/api/Auth/login';
   static const String profileEndpoint = '/api/User/profile';
