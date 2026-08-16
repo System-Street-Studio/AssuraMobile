@@ -7,11 +7,12 @@ import 'api_service.dart';
 import '../core/constants/app_constants.dart';
 import 'package:http/http.dart' as http;
 
-// The mobile app currently only has an Admin-dashboard-style workflow
-// (QR scan -> asset lookup -> status update), which Storekeepers also need.
-// Keep this list in sync with backend `Assura.Domain.Constants.Roles` for
-// any role that should be allowed to log into the mobile app.
-const List<String> _mobileAllowedRoles = ['Admin', 'Storekeeper'];
+// The mobile app is Admin-only: its entire duty is scanning an asset's QR
+// code and verifying/updating that asset's status. No other role — including
+// Storekeeper and SystemAdmin — is supported here. Keep this list in sync
+// with the corresponding backend role restrictions (AdminController,
+// AssetsController) if it ever needs to change.
+const List<String> _mobileAllowedRoles = ['Admin'];
 
 bool isRoleAuthorized(List<String> roles) {
   return roles.any(_mobileAllowedRoles.contains);
@@ -68,7 +69,7 @@ class AuthService extends ChangeNotifier {
         _user = null;
         _profile = null;
         _setLoading(false);
-        throw Exception('Access denied. Only Admin and Storekeeper accounts are allowed.');
+        throw Exception('Access denied. Only Admin accounts are allowed.');
       }
 
       await _saveAuthData(_token!, _user!);
