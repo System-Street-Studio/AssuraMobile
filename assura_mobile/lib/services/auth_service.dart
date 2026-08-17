@@ -1,11 +1,11 @@
 import 'dart:convert';
+import 'dart:io' show SocketException;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/models/user_model.dart';
 import '../core/models/user_profile_model.dart';
 import 'api_service.dart';
 import '../core/constants/app_constants.dart';
-import 'package:http/http.dart' as http;
 
 // The mobile app is Admin-only: its entire duty is scanning an asset's QR
 // code and verifying/updating that asset's status. No other role — including
@@ -82,8 +82,11 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  // Forgot Password method
-  Future<bool> forgotPassword(String email) async {
+  // Forgot Password method. Returns null on success, or a user-facing error
+  // message on failure - the backend always returns 200 for this endpoint
+  // (anti-enumeration), so a failure here almost always means a connectivity
+  // problem, not a rejected request.
+  Future<String?> forgotPassword(String email) async {
     _setLoading(true);
     try {
       await _apiService.post(
@@ -91,16 +94,20 @@ class AuthService extends ChangeNotifier {
         body: {'email': email},
       );
       _setLoading(false);
-      return true;
+      return null;
     } catch (e) {
       _setLoading(false);
       debugPrint('Error in forgotPassword: $e');
-      return false;
+      return _isNetworkError(e)
+          ? 'Network error. Please check your connection and try again.'
+          : 'Something went wrong. Please try again.';
     }
   }
 
-  // Reset Password method
-  Future<bool> resetPassword(
+  // Reset Password method. Returns null on success, or a user-facing error
+  // message on failure, distinguishing a connectivity problem from the
+  // backend explicitly rejecting the token (invalid/expired).
+  Future<String?> resetPassword(
       String email, String token, String newPassword) async {
     _setLoading(true);
     try {
@@ -113,13 +120,22 @@ class AuthService extends ChangeNotifier {
         },
       );
       _setLoading(false);
-      return true;
+      return null;
     } catch (e) {
       _setLoading(false);
       debugPrint('Error in resetPassword: $e');
-      return false;
+      return _isNetworkError(e)
+          ? 'Network error. Please check your connection and try again.'
+          : 'Invalid or expired token. Please request a new reset link.';
     }
   }
+
+  // ApiService throws a plain Exception for any non-2xx HTTP response (i.e.
+  // the backend was reached and explicitly rejected the request), so any
+  // other exception type reaching here means the request never got a
+  // response at all - a genuine connectivity issue.
+  bool _isNetworkError(Object e) =>
+      e is SocketException || e.toString().contains('SocketException');
 
   // Logout method
   Future<void> logout() async {
@@ -157,21 +173,13 @@ class AuthService extends ChangeNotifier {
     if (_token == null) return null;
 
     try {
-      final response = await http.get(
-        Uri.parse('${AppConstants.apiBaseUrl}/api/users/profile'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_token',
-          'ngrok-skip-browser-warning': 'true',
-        },
+      final data = await _apiService.get(
+        AppConstants.profileEndpoint,
+        headers: {'Authorization': 'Bearer $_token'},
       );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        _profile = UserProfileModel.fromJson(data);
-        notifyListeners();
-        return _profile;
-      }
+      _profile = UserProfileModel.fromJson(data);
+      notifyListeners();
+      return _profile;
     } catch (e) {
       debugPrint('Error fetching user profile: $e');
     }
@@ -183,30 +191,23 @@ class AuthService extends ChangeNotifier {
     if (_token == null) return false;
 
     try {
-      final response = await http.put(
-        Uri.parse('${AppConstants.apiBaseUrl}/api/users/profile'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_token',
-          'ngrok-skip-browser-warning': 'true',
-        },
-        body: json.encode(updatedProfile.toJson(password: password, currentPassword: currentPassword)),
+      await _apiService.put(
+        AppConstants.profileEndpoint,
+        headers: {'Authorization': 'Bearer $_token'},
+        body: updatedProfile.toJson(password: password, currentPassword: currentPassword),
       );
-
-      if (response.statusCode == 200) {
-        _profile = updatedProfile;
-        // Also update the short UserModel name if changed
-        if (_user != null) {
-          _user = UserModel(
-            id: _user!.id,
-            userName: updatedProfile.username,
-            name: '${updatedProfile.firstName} ${updatedProfile.lastName}',
-            roles: _user!.roles,
-          );
-        }
-        notifyListeners();
-        return true;
+      _profile = updatedProfile;
+      // Also update the short UserModel name if changed
+      if (_user != null) {
+        _user = UserModel(
+          id: _user!.id,
+          userName: updatedProfile.username,
+          name: '${updatedProfile.firstName} ${updatedProfile.lastName}',
+          roles: _user!.roles,
+        );
       }
+      notifyListeners();
+      return true;
     } catch (e) {
       debugPrint('Error updating user profile: $e');
     }

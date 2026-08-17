@@ -27,7 +27,7 @@ class AppConstants {
 
   static const String healthEndpoint = '/health';
   static const String loginEndpoint = '/api/Auth/login';
-  static const String profileEndpoint = '/api/User/profile';
+  static const String profileEndpoint = '/api/users/profile';
   static const String dashboardStatsEndpoint = '/api/Admin/dashboard-stats';
   static const String forgotPasswordEndpoint = '/api/Auth/forgot-password';
   static const String resetPasswordEndpoint = '/api/Auth/reset-password';
