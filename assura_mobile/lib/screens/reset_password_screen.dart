@@ -24,6 +24,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
   late AnimationController _controller;
   bool _isLoading = false;
   bool _isSuccess = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void initState() {
