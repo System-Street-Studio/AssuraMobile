@@ -24,6 +24,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _currentPasswordController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  bool _obscureCurrentPassword = true;
+  bool _obscurePassword = true;
 
   @override
   void initState() {
@@ -272,8 +274,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             const SizedBox(height: 15),
                             if (isEditMode) ...[
                               _buildField('Current Password (Required for changing password)',
-                                  _currentPasswordController, isPassword: true,
-                                  validator: (value) {
+                                  _currentPasswordController,
+                                  isPassword: true,
+                                  obscureText: _obscureCurrentPassword,
+                                  onToggleVisibility: () {
+                                setState(() {
+                                  _obscureCurrentPassword =
+                                      !_obscureCurrentPassword;
+                                });
+                              }, validator: (value) {
                                 if (_passwordController.text.isNotEmpty && (value == null || value.isEmpty)) {
                                   return 'Current password required to set a new password';
                                 }
@@ -281,8 +290,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               }),
                               const SizedBox(height: 15),
                               _buildField('New Password (Optional)',
-                                  _passwordController, isPassword: true,
-                                  validator: (value) {
+                                  _passwordController,
+                                  isPassword: true,
+                                  obscureText: _obscurePassword,
+                                  onToggleVisibility: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              }, validator: (value) {
                                 if (value != null && value.isNotEmpty) {
                                   if (value.length < 8) return 'Min 8 characters';
                                   if (!RegExp(r'(?=.*[a-z])').hasMatch(value)) return 'Need lowercase letter';
@@ -348,6 +363,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildField(String label, TextEditingController controller,
       {bool isPassword = false,
+      bool obscureText = false,
+      VoidCallback? onToggleVisibility,
       TextInputType keyboardType = TextInputType.text,
       String? Function(String?)? validator}) {
     return Column(
@@ -361,7 +378,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (isEditMode)
           TextFormField(
             controller: controller,
-            obscureText: isPassword,
+            obscureText: isPassword ? obscureText : false,
             keyboardType: keyboardType,
             validator: validator,
             decoration: InputDecoration(
@@ -380,6 +397,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               errorStyle: const TextStyle(height: 0.8),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+              suffixIcon: isPassword
+                  ? IconButton(
+                      icon: Icon(
+                        obscureText
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        size: 20,
+                        color: Colors.grey,
+                      ),
+                      onPressed: onToggleVisibility,
+                    )
+                  : null,
             ),
             style: const TextStyle(fontSize: 15, color: Colors.black87),
           )

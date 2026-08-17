@@ -302,11 +302,25 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
                                 const SizedBox(height: 16),
                                 TextFormField(
                                   controller: _passwordController,
-                                  obscureText: true,
+                                  obscureText: _obscurePassword,
                                   style: const TextStyle(color: Color(0xFFF8FAFC)), // Slate 50
                                   decoration: InputDecoration(
                                     prefixIcon: const Icon(Icons.lock_outline,
                                         size: 20, color: Color(0xFF94A3B8)),
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _obscurePassword
+                                            ? Icons.visibility_off_outlined
+                                            : Icons.visibility_outlined,
+                                        size: 20,
+                                        color: const Color(0xFF94A3B8),
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _obscurePassword = !_obscurePassword;
+                                        });
+                                      },
+                                    ),
                                     hintText: 'New Password',
                                     hintStyle: const TextStyle(color: Color(0xFF64748B)), // Slate 500
                                     filled: true,
@@ -345,11 +359,26 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
                                 const SizedBox(height: 16),
                                 TextFormField(
                                   controller: _confirmPasswordController,
-                                  obscureText: true,
+                                  obscureText: _obscureConfirmPassword,
                                   style: const TextStyle(color: Color(0xFFF8FAFC)), // Slate 50
                                   decoration: InputDecoration(
                                     prefixIcon: const Icon(Icons.lock_reset,
                                         size: 20, color: Color(0xFF94A3B8)),
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _obscureConfirmPassword
+                                            ? Icons.visibility_off_outlined
+                                            : Icons.visibility_outlined,
+                                        size: 20,
+                                        color: const Color(0xFF94A3B8),
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _obscureConfirmPassword =
+                                              !_obscureConfirmPassword;
+                                        });
+                                      },
+                                    ),
                                     hintText: 'Confirm Password',
                                     hintStyle: const TextStyle(color: Color(0xFF64748B)), // Slate 500
                                     filled: true,
