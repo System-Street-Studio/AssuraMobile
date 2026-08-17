@@ -1,3 +1,6 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 class AppConstants {
   // App Strings
   static const String appName = 'Assura';
@@ -7,9 +10,21 @@ class AppConstants {
   static const String loginButtonText = 'Login';
   static const String forgotPasswordText = 'Forgot Password';
 
-  // API Endpoints (Placeholders)
-  static const String apiBaseUrl =
-      'http://10.0.2.2:5000'; // Default Android Emulator IP for localhost
+  // Manual override for real-device/tunnel testing (e.g. ngrok). Leave empty
+  // to use the per-platform default below. start_ngrok.ps1 rewrites this
+  // line directly, so keep the exact `= '...'` literal form.
+  static const String apiBaseUrlOverride = '';
+
+  // API Endpoints
+  static String get apiBaseUrl {
+    if (apiBaseUrlOverride.isNotEmpty) return apiBaseUrlOverride;
+    // Only the Android emulator needs the special 10.0.2.2 alias to reach
+    // the host's loopback; web, desktop, and iOS simulator targets share the
+    // host's own localhost directly.
+    if (!kIsWeb && Platform.isAndroid) return 'http://10.0.2.2:5000';
+    return 'http://localhost:5000';
+  }
+
   static const String healthEndpoint = '/health';
   static const String loginEndpoint = '/api/Auth/login';
   static const String profileEndpoint = '/api/User/profile';

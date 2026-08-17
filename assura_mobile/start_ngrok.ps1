@@ -38,7 +38,7 @@ Write-Host "Ngrok is live at: $PublicUrl" -ForegroundColor Green
 if (Test-Path $FlutterConstantsPath) {
     Write-Host "Updating Flutter constants at $FlutterConstantsPath..." -ForegroundColor Cyan
     $content = Get-Content $FlutterConstantsPath
-    $newContent = $content -replace "static const String apiBaseUrl = '.*';", "static const String apiBaseUrl = '$PublicUrl';"
+    $newContent = $content -replace "static const String apiBaseUrlOverride = '.*';", "static const String apiBaseUrlOverride = '$PublicUrl';"
     $newContent | Set-Content $FlutterConstantsPath
     Write-Host "Successfully updated apiBaseUrl to $PublicUrl" -ForegroundColor Green
 } else {

@@ -7,6 +7,7 @@ import '../widgets/app_drawer.dart';
 import '../services/dashboard_service.dart';
 import '../services/asset_service.dart';
 import '../services/auth_service.dart';
+import '../services/qr_service.dart';
 import 'scanner_screen.dart';
 import 'asset_details_screen.dart';
 
@@ -29,12 +30,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   void _startScan() async {
-    final String? code = await Navigator.push(
+    final String? rawCode = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const ScannerScreen()),
     );
 
-    if (code != null && mounted) {
+    if (rawCode != null && mounted) {
+      final code = QrParserService.extractAssetCode(rawCode);
       final assetService = Provider.of<AssetService>(context, listen: false);
       final asset = assetService.getAssetByCode(code);
 

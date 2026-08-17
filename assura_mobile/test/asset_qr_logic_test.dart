@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:assura_mobile/services/qr_service.dart';
 
 // Mocking the model for the test
 class Asset {
@@ -15,21 +16,9 @@ class Asset {
   }
 }
 
-// Mocking the QR Parsing logic that would normally be in your service
-class QrParserService {
-  static String extractAssetCode(String qrData) {
-    // Assuming the QR code is formatted as a URL or JSON string
-    // e.g., "ASSURA-QR:AST-001"
-    if (qrData.startsWith('ASSURA-QR:')) {
-      return qrData.split(':')[1];
-    }
-    return '';
-  }
-}
-
 void main() {
   group('Mobile App - Asset QR Scanning Logic Tests', () {
-    
+
     test('QR Code Parsing: Should extract correct Asset Code from valid QR string', () {
       // 1. Arrange
       const validQrString = 'ASSURA-QR:AST-10045';
@@ -41,15 +30,18 @@ void main() {
       expect(extractedCode, 'AST-10045');
     });
 
-    test('QR Code Parsing: Should return empty string for invalid QR format', () {
+    test('QR Code Parsing: Falls back to the raw payload for a non-prefixed code', () {
+      // Some asset labels in the field may carry just the bare asset code
+      // with no "ASSURA-QR:" prefix; scanning those must still resolve the
+      // asset instead of always failing.
       // 1. Arrange
-      const invalidQrString = 'RANDOM_TEXT_NOT_ASSURA';
+      const rawQrString = 'AST-505';
 
       // 2. Act
-      final extractedCode = QrParserService.extractAssetCode(invalidQrString);
+      final extractedCode = QrParserService.extractAssetCode(rawQrString);
 
       // 3. Assert
-      expect(extractedCode, '');
+      expect(extractedCode, 'AST-505');
     });
 
     test('Asset Model JSON Serialization: Should map correctly', () {

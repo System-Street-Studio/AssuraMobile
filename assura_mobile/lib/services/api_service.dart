@@ -5,7 +5,7 @@ import '../core/constants/app_constants.dart';
 class ApiService {
   final String baseUrl;
 
-  ApiService({this.baseUrl = AppConstants.apiBaseUrl});
+  ApiService({String? baseUrl}) : baseUrl = baseUrl ?? AppConstants.apiBaseUrl;
 
   // Helper for GET requests
   Future<dynamic> get(String endpoint, {Map<String, String>? headers}) async {

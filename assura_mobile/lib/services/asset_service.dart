@@ -114,6 +114,34 @@ class AssetService with ChangeNotifier {
     }
   }
 
+  // Confirms the scanned asset's current details (division/status/assignee)
+  // already match reality, with no changes needed. Backed by the existing
+  // VerifyAssetCommand (POST /api/Reporting/assets/{id}/verify), which stamps
+  // LastVerifiedAt/LastVerifiedByUserId and writes an audit log entry.
+  Future<bool> verifyAsset(int assetId) async {
+    try {
+      final token = _authService.token;
+      if (token == null) throw Exception('Not authenticated');
+
+      final url = Uri.parse(
+          '${AppConstants.apiBaseUrl}/api/Reporting/assets/$assetId/verify');
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+          'ngrok-skip-browser-warning': 'true',
+        },
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      _error = 'An error occurred: $e';
+      notifyListeners();
+      return false;
+    }
+  }
+
   AssetModel? getAssetByCode(String code) {
     try {
       return _assets

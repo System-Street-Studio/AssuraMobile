@@ -19,6 +19,8 @@ class AssetModel {
   final String supplierName;
   final int? assignedUserId;
   final String? assignedUserName;
+  final DateTime? lastVerifiedAt;
+  final String? lastVerifiedByName;
 
   AssetModel({
     required this.id,
@@ -41,6 +43,8 @@ class AssetModel {
     required this.supplierName,
     this.assignedUserId,
     this.assignedUserName,
+    this.lastVerifiedAt,
+    this.lastVerifiedByName,
   });
 
   factory AssetModel.fromJson(Map<String, dynamic> json) {
@@ -80,6 +84,10 @@ class AssetModel {
           ? json['assignedUserId']
           : int.tryParse(json['assignedUserId']?.toString() ?? ''),
       assignedUserName: json['assignedUserName'],
+      lastVerifiedAt: json['lastVerifiedAt'] != null
+          ? DateTime.tryParse(json['lastVerifiedAt'].toString())
+          : null,
+      lastVerifiedByName: json['lastVerifiedByName'],
     );
   }
 
