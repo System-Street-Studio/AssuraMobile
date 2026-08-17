@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'dart:ui';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
@@ -20,6 +21,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
   late AnimationController _controller;
   bool _isLoading = false;
   String? _successMessage;
+  Timer? _cooldownTimer;
+  int _cooldownSeconds = 0;
+
+  static const int _resendCooldownSeconds = 30;
 
   @override
   void initState() {
@@ -34,7 +39,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
   void dispose() {
     _emailController.dispose();
     _controller.dispose();
+    _cooldownTimer?.cancel();
     super.dispose();
+  }
+
+  void _startCooldown() {
+    setState(() => _cooldownSeconds = _resendCooldownSeconds);
+    _cooldownTimer?.cancel();
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _cooldownSeconds--;
+        if (_cooldownSeconds <= 0) {
+          timer.cancel();
+        }
+      });
+    });
   }
 
   void _handleReset() async {
@@ -50,17 +73,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
-      final success = await authService.forgotPassword(_emailController.text);
+      final errorMessage =
+          await authService.forgotPassword(_emailController.text);
 
-      if (success && mounted) {
+      if (errorMessage == null && mounted) {
         setState(() {
           _successMessage =
               'If an account exists, a reset link has been sent to your email.';
         });
+        _startCooldown();
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Something went wrong. Please try again.')),
+          SnackBar(content: Text(errorMessage!)),
         );
       }
     } finally {
@@ -243,7 +267,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                               if (value == null || value.isEmpty) {
                                 return 'Please enter your email';
                               }
-                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$')
                                   .hasMatch(value)) {
                                 return 'Please enter a valid email';
                               }
@@ -255,7 +279,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                             width: double.infinity,
                             height: 48,
                             child: ElevatedButton(
-                              onPressed: _isLoading ? null : _handleReset,
+                              onPressed: (_isLoading || _cooldownSeconds > 0)
+                                  ? null
+                                  : _handleReset,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF4F46E5), // Solid indigo
                                 foregroundColor: Colors.white,
@@ -265,18 +291,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: const Text('Send Reset Link',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Jost')),
+                              child: Text(
+                                _cooldownSeconds > 0
+                                    ? 'Resend in ${_cooldownSeconds}s'
+                                    : 'Send Reset Link',
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Jost'),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 16),
                           TextButton(
                             onPressed: () {
+                              // Only carry the email across if it's actually valid -
+                              // otherwise leave the next screen's email field blank
+                              // instead of seeding it with an unvalidated, possibly
+                              // garbage value the user never confirmed.
+                              final email = _emailController.text;
+                              final isValidEmail = RegExp(
+                                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$')
+                                  .hasMatch(email);
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => ResetPasswordScreen(
-                                    initialEmail: _emailController.text,
+                                    initialEmail: isValidEmail ? email : null,
                                   ),
                                 ),
                               );

@@ -59,13 +59,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
-      final success = await authService.resetPassword(
+      final errorMessage = await authService.resetPassword(
         _emailController.text,
         _tokenController.text,
         _passwordController.text,
       );
 
-      if (success && mounted) {
+      if (errorMessage == null && mounted) {
         setState(() {
           _isSuccess = true;
         });
@@ -76,9 +76,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
         });
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content:
-                  Text('Failed to reset password. Please check your token.')),
+          SnackBar(content: Text(errorMessage!)),
         );
       }
     } finally {
