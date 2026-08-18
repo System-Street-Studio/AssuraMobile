@@ -13,7 +13,7 @@ class AppConstants {
   // Manual override for real-device/tunnel testing (e.g. ngrok). Leave empty
   // to use the per-platform default below. start_ngrok.ps1 rewrites this
   // line directly, so keep the exact `= '...'` literal form.
-  static const String apiBaseUrlOverride = 'http://10.10.22.161:5000';
+  static const String apiBaseUrlOverride = 'https://assurabackend-production.up.railway.app';
 
   // API Endpoints
   static String get apiBaseUrl {
