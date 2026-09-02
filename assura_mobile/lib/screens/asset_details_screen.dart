@@ -237,62 +237,93 @@ class _AssetDetailsScreenState extends State<AssetDetailsScreen> {
                 '${verifiedBy != null ? ' by $verifiedBy' : ''}'
             : 'Never verified';
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Verification',
-          style: TextStyle(color: Colors.grey, fontSize: 14),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: showAsVerified
+            ? Colors.green.shade50
+            : const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: showAsVerified
+              ? Colors.green.shade300
+              : const Color(0xFFCBD5E1),
         ),
-        const SizedBox(height: 5),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFD9D9D9).withOpacity(0.5),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
               Icon(
-                showAsVerified ? Icons.check_circle : Icons.help_outline,
-                color: showAsVerified ? Colors.green : Colors.grey,
-                size: 20,
+                showAsVerified ? Icons.verified : Icons.admin_panel_settings_outlined,
+                color: showAsVerified ? Colors.green.shade700 : const Color(0xFF4F46E5),
+                size: 24,
               ),
               const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  statusLine,
-                  style: const TextStyle(fontSize: 15, color: Colors.black87),
+              Text(
+                'Asset Verification',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: showAsVerified ? Colors.green.shade900 : const Color(0xFF1E293B),
                 ),
               ),
             ],
           ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: isVerifying ? null : _confirmVerified,
-            icon: isVerifying
-                ? const SizedBox(
-                    height: 16,
-                    width: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.check_circle_outline),
-            label: Text(isVerifying ? 'Confirming...' : 'Confirm Verified'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.green.shade700,
-              side: BorderSide(color: Colors.green.shade700),
-              minimumSize: const Size(120, 45),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+          const SizedBox(height: 8),
+          Text(
+            statusLine,
+            style: TextStyle(
+              fontSize: 13,
+              color: showAsVerified ? Colors.green.shade800 : Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: (isVerifying || showAsVerified) ? null : _confirmVerified,
+              icon: isVerifying
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : Icon(
+                      showAsVerified ? Icons.check_circle : Icons.verified_user,
+                      color: Colors.white,
+                    ),
+              label: Text(
+                isVerifying
+                    ? 'Verifying...'
+                    : showAsVerified
+                        ? '✓ Verified'
+                        : 'Verify Asset',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: showAsVerified
+                    ? Colors.green.shade600
+                    : const Color(0xFF16A34A),
+                disabledBackgroundColor: showAsVerified
+                    ? Colors.green.shade600
+                    : Colors.grey.shade400,
+                elevation: showAsVerified ? 0 : 3,
+                minimumSize: const Size(120, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
