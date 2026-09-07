@@ -1,27 +1,30 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'dart:ui';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../core/constants/app_colors.dart';
 import '../core/constants/app_constants.dart';
-import 'admin_dashboard.dart';
-import 'forgot_password_screen.dart';
+import 'reset_password_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _emailController = TextEditingController();
   late AnimationController _controller;
   bool _isLoading = false;
-  bool _obscurePassword = true;
+  String? _successMessage;
+  Timer? _cooldownTimer;
+  int _cooldownSeconds = 0;
+
+  static const int _resendCooldownSeconds = 30;
 
   @override
   void initState() {
@@ -34,38 +37,54 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   void dispose() {
-    _usernameController.dispose();
-    _passwordController.dispose();
+    _emailController.dispose();
     _controller.dispose();
+    _cooldownTimer?.cancel();
     super.dispose();
   }
 
-  void _handleLogin() async {
+  void _startCooldown() {
+    setState(() => _cooldownSeconds = _resendCooldownSeconds);
+    _cooldownTimer?.cancel();
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _cooldownSeconds--;
+        if (_cooldownSeconds <= 0) {
+          timer.cancel();
+        }
+      });
+    });
+  }
+
+  void _handleReset() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
     setState(() {
       _isLoading = true;
+      _successMessage = null;
     });
     _controller.repeat();
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
-      final success = await authService.login(
-        _usernameController.text,
-        _passwordController.text,
-      );
+      final errorMessage =
+          await authService.forgotPassword(_emailController.text);
 
-      if (success && mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const AdminDashboard()),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
+      if (errorMessage == null && mounted) {
+        setState(() {
+          _successMessage =
+              'If an account exists, a reset link has been sent to your email.';
+        });
+        _startCooldown();
+      } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+          SnackBar(content: Text(errorMessage!)),
         );
       }
     } finally {
@@ -81,6 +100,13 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: const Text('Forgot Password', style: TextStyle(color: Color(0xFFF8FAFC), fontFamily: 'Jost')),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFFF8FAFC)),
+      ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -138,7 +164,6 @@ class _LoginScreenState extends State<LoginScreen>
                 child: SingleChildScrollView(
                   child: Form(
                     key: _formKey,
-                    autovalidateMode: AutovalidateMode.onUserInteraction,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
                       child: BackdropFilter(
@@ -162,156 +187,101 @@ class _LoginScreenState extends State<LoginScreen>
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
+                              Image.asset(
+                                AppConstants.logoPath,
+                                width: 80,
+                                height: 80,
+                              ),
+                              const SizedBox(height: 24),
                               const Text(
-                                AppConstants.appName,
+                                'Reset Password',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Color(0xFFF8FAFC), // Slate 50
-                                  fontSize: 28,
+                                  fontSize: 22,
                                   fontWeight: FontWeight.bold,
-                                  letterSpacing: 1,
+                                  fontFamily: 'Jost',
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 12),
                               const Text(
-                                AppConstants.loginSubtitle,
+                                'Enter your email address and we\'ll send you a link to reset your password.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Color(0xFF94A3B8), // Slate 400
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                          const SizedBox(height: 40),
-                          TextFormField(
-                            controller: _usernameController,
-                            style: const TextStyle(color: Color(0xFFF8FAFC)), // Slate 50
-                            decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.person_outline,
-                                  size: 20, color: Color(0xFF94A3B8)),
-                              hintText: AppConstants.usernameHint,
-                              hintStyle: const TextStyle(color: Color(0xFF64748B)), // Slate 500
-                              filled: true,
-                              fillColor: const Color(0xFF0F172A).withOpacity(0.5), // Slate 900
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: const Color(0xFF94A3B8).withOpacity(0.2)),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: const Color(0xFF94A3B8).withOpacity(0.2)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFF818CF8)), // Indigo
-                              ),
-                              errorBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Colors.red, width: 1),
-                              ),
-                              focusedErrorBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Colors.red, width: 1.5),
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter username';
-                              }
-                              if (value.length < 3) {
-                                return 'Username too short';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          TextFormField(
-                            controller: _passwordController,
-                            obscureText: _obscurePassword,
-                            style: const TextStyle(color: Color(0xFFF8FAFC)), // Slate 50
-                            decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.lock_outline,
-                                  size: 20, color: Color(0xFF94A3B8)),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_off_outlined
-                                      : Icons.visibility_outlined,
-                                  size: 20,
-                                  color: const Color(0xFF94A3B8),
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
-                              ),
-                              hintText: AppConstants.passwordHint,
-                              hintStyle: const TextStyle(color: Color(0xFF64748B)), // Slate 500
-                              filled: true,
-                              fillColor: const Color(0xFF0F172A).withOpacity(0.5), // Slate 900
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: const Color(0xFF94A3B8).withOpacity(0.2)),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(color: const Color(0xFF94A3B8).withOpacity(0.2)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Color(0xFF818CF8)), // Indigo
-                              ),
-                              errorBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Colors.red, width: 1),
-                              ),
-                              focusedErrorBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: Colors.red, width: 1.5),
-                              ),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter password';
-                              }
-                              if (value.length < 4) {
-                                return 'Password too short';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const ForgotPasswordScreen(),
-                                  ),
-                                );
-                              },
-                              style: TextButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                  foregroundColor: const Color(0xFF818CF8)), // Indigo
-                              child: const Text(
-                                AppConstants.forgotPasswordText,
-                                style: TextStyle(
                                   fontSize: 14,
-                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'Jost',
                                 ),
                               ),
+                              const SizedBox(height: 32),
+                          if (_successMessage != null) ...[
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.green),
+                              ),
+                              child: Text(
+                                _successMessage!,
+                                style: const TextStyle(
+                                    color: Colors.green, fontSize: 13),
+                                textAlign: TextAlign.center,
+                              ),
                             ),
+                            const SizedBox(height: 24),
+                          ],
+                          TextFormField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            style: const TextStyle(color: Color(0xFFF8FAFC)), // Slate 50
+                            decoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.email_outlined,
+                                  size: 20, color: Color(0xFF94A3B8)),
+                              hintText: 'Email Address',
+                              hintStyle: const TextStyle(color: Color(0xFF64748B)), // Slate 500
+                              filled: true,
+                              fillColor: const Color(0xFF0F172A).withOpacity(0.5), // Slate 900
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: const Color(0xFF94A3B8).withOpacity(0.2)),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(color: const Color(0xFF94A3B8).withOpacity(0.2)),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Color(0xFF818CF8)), // Indigo
+                              ),
+                              errorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Colors.red, width: 1),
+                              ),
+                              focusedErrorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(color: Colors.red, width: 1.5),
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your email';
+                              }
+                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$')
+                                  .hasMatch(value)) {
+                                return 'Please enter a valid email';
+                              }
+                              return null;
+                            },
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 32),
                           SizedBox(
                             width: double.infinity,
                             height: 48,
                             child: ElevatedButton(
-                              onPressed: _handleLogin,
+                              onPressed: (_isLoading || _cooldownSeconds > 0)
+                                  ? null
+                                  : _handleReset,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF4F46E5), // Solid indigo
                                 foregroundColor: Colors.white,
@@ -321,19 +291,47 @@ class _LoginScreenState extends State<LoginScreen>
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: const Text(AppConstants.loginButtonText,
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              child: Text(
+                                _cooldownSeconds > 0
+                                    ? 'Resend in ${_cooldownSeconds}s'
+                                    : 'Send Reset Link',
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Jost'),
+                              ),
                             ),
                           ),
-                            ],
+                          const SizedBox(height: 16),
+                          TextButton(
+                            onPressed: () {
+                              // Only carry the email across if it's actually valid -
+                              // otherwise leave the next screen's email field blank
+                              // instead of seeding it with an unvalidated, possibly
+                              // garbage value the user never confirmed.
+                              final email = _emailController.text;
+                              final isValidEmail = RegExp(
+                                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$')
+                                  .hasMatch(email);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ResetPasswordScreen(
+                                    initialEmail: isValidEmail ? email : null,
+                                  ),
+                                ),
+                              );
+                            },
+                            style: TextButton.styleFrom(
+                                foregroundColor: const Color(0xFF818CF8)), // Indigo
+                            child: const Text('Already have a token?', style: TextStyle(fontFamily: 'Jost')),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ),
-            ],
+            ),
+          ),
+        ],
             if (_isLoading)
               Center(
                 child: RotationTransition(
